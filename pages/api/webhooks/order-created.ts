@@ -1,9 +1,7 @@
 import { NextApiHandler } from "next";
 import { TaxJarConfig } from "../../../backend/types";
-import { createTaxJarOrder} from "../../../backend/taxHandlers";
-import {
-  OrderCreatedEventSubscriptionFragment
-} from "../../../generated/graphql";
+import { createTaxJarOrder } from "../../../backend/taxHandlers";
+import { OrderCreatedEventSubscriptionFragment } from "../../../generated/graphql";
 
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
@@ -16,7 +14,7 @@ const handler: NextApiHandler = async (request, response) => {
     return;
   }
 
-  // FIXME: the validation of webhook should take into account webhook.secretKey, 
+  // FIXME: the validation of webhook should take into account webhook.secretKey,
   // the domain should also be validated
   try {
     webhookMiddleware(request, expectedEvent);
@@ -32,7 +30,7 @@ const handler: NextApiHandler = async (request, response) => {
 
   const body: OrderCreatedEventSubscriptionFragment = request.body;
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based 
+  // FIXME: this part of settings will be fetched from App.metadata and defined based
   // on channnel used in order.
   const taxJarConfig: TaxJarConfig = {
     shipFrom: {

@@ -13,7 +13,7 @@ const handler: NextApiHandler = async (request, response) => {
     response.status(405).send({ message: "Only POST requests allowed" });
     return;
   }
-  // FIXME: the validation of webhook should take into account webhook.secretKey, 
+  // FIXME: the validation of webhook should take into account webhook.secretKey,
   // the domain should also be validated
   try {
     webhookMiddleware(request, expectedEvent);
@@ -31,12 +31,12 @@ const handler: NextApiHandler = async (request, response) => {
 
   const checkoutPayload: CheckoutPayload = body[0];
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based 
+  // FIXME: this part of settings will be fetched from App.metadata and defined based
   // on channnel used in checkout.
-  const taxJarConfig = getTaxJarConfig()
+  const taxJarConfig = getTaxJarConfig();
   const calculatedTaxes = await calculateCheckoutTaxes(
     checkoutPayload,
-    taxJarConfig,
+    taxJarConfig
   );
   response.json(calculatedTaxes.data);
 };

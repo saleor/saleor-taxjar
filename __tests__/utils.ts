@@ -74,21 +74,6 @@ export const getDummyCheckoutPayload = () => {
   return checkoutPayload;
 };
 
-export const getDummyCheckoutResponsePayload = () => {
-  const checkoutResponse: CheckoutResponsePayload = {
-    shipping_price_gross_amount: "12",
-    shipping_price_net_amount: "10",
-    shipping_tax_rate: "0.2",
-    lines: [
-      {
-        total_gross_amount: "33.6",
-        total_net_amount: "28",
-        tax_rate: "0.2",
-      },
-    ],
-  };
-};
-
 export const getDummyTaxesResponseForCheckout = (): TaxForOrderRes => ({
   tax: {
     exemption_type: null,
@@ -156,7 +141,7 @@ export const getDummyOrderCreatedPayload = () => ({
       streetAddress1: "8559 Lakes Avenue",
       streetAddress2: "",
       city: "POOLE",
-      cityArea: "",
+      countryArea: "",
       postalCode: "BH15 1AB",
       country: {
         code: "US",
@@ -169,7 +154,7 @@ export const getDummyOrderCreatedPayload = () => ({
       streetAddress1: "8559 Lakes Avenue",
       streetAddress2: "",
       city: "POOLE",
-      cityArea: "",
+      countryArea: "",
       postalCode: "BH15 1AB",
       country: {
         code: "US",

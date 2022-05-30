@@ -25,7 +25,6 @@ type DiscountPayload = {
   amount: string;
 };
 
-
 type CheckoutLinePayload = {
   id: string;
   variant_id: string;
@@ -40,7 +39,6 @@ type CheckoutLinePayload = {
   unit_amount: string;
   total_amount: string;
 };
-
 
 export type CheckoutPayload = {
   id: string;
@@ -57,7 +55,6 @@ export type CheckoutPayload = {
   discounts: Array<DiscountPayload>;
   lines: Array<CheckoutLinePayload>;
 };
-
 
 export interface CheckoutLineResponsePayload {
   total_gross_amount: string;

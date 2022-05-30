@@ -1,8 +1,12 @@
-import  {fetchTaxesForCheckout} from "../../../backend/taxjarApi";
+import { fetchTaxesForCheckout } from "../../../backend/taxjarApi";
 import { CheckoutResponsePayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 import handler from "../../../pages/api/webhooks/checkout-calculate-taxes";
-import { getDummyCheckoutPayload, getDummyTaxesResponseForCheckout, mockRequest } from "../../utils";
+import {
+  getDummyCheckoutPayload,
+  getDummyTaxesResponseForCheckout,
+  mockRequest,
+} from "../../utils";
 
 jest.mock("../../../backend/taxjarApi");
 
@@ -15,7 +19,11 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
   it("rejects when saleor domain is missing", async () => {
     const domain = undefined;
-    const { req, res } = mockRequest("POST", "checkout_calculate_taxes", domain);
+    const { req, res } = mockRequest(
+      "POST",
+      "checkout_calculate_taxes",
+      domain
+    );
 
     const checkoutPayload = getDummyCheckoutPayload();
     req.body = [checkoutPayload];
@@ -41,15 +49,20 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     expect(mockedFetchTaxesForCheckout).not.toHaveBeenCalled();
   });
 
-
-
   it("rejects when saleor signature is empty", async () => {
     const signature = undefined;
-    const { req, res } = mockRequest("POST", "checkout_calculate_taxes", "example.com", signature);
+    const { req, res } = mockRequest(
+      "POST",
+      "checkout_calculate_taxes",
+      "example.com",
+      signature
+    );
 
     const mockedTaxJarResponseData = getDummyTaxesResponseForCheckout();
     const mockedTaxJarResponse =
-      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {return mockedTaxJarResponseData});
+      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
+        return mockedTaxJarResponseData;
+      });
     const checkoutPayload = getDummyCheckoutPayload();
     req.body = [checkoutPayload];
 
@@ -58,15 +71,22 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     expect(res.statusCode).toBe(400);
     expect(mockedFetchTaxesForCheckout).not.toHaveBeenCalled();
-  })
+  });
 
-  it("rejects when saleor signature is incorrect", async () =>{
+  it("rejects when saleor signature is incorrect", async () => {
     const signature = "incorrect-sig";
-    const { req, res } = mockRequest("POST", "checkout_calculate_taxes", "example.com", signature);
+    const { req, res } = mockRequest(
+      "POST",
+      "checkout_calculate_taxes",
+      "example.com",
+      signature
+    );
 
     const mockedTaxJarResponseData = getDummyTaxesResponseForCheckout();
     const mockedTaxJarResponse =
-      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {return mockedTaxJarResponseData});
+      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
+        return mockedTaxJarResponseData;
+      });
     const checkoutPayload = getDummyCheckoutPayload();
     req.body = [checkoutPayload];
 
@@ -75,26 +95,32 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     expect(res.statusCode).toBe(400);
     expect(mockedFetchTaxesForCheckout).not.toHaveBeenCalled();
-  })
+  });
 
   it("fetch taxes for checkout", async () => {
     const mockedTaxJarResponseData = getDummyTaxesResponseForCheckout();
     const mockedTaxJarResponse =
-      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {return mockedTaxJarResponseData});
-    const { req, res } = mockRequest("POST", "checkout_calculate_taxes", "example.com");
+      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
+        return mockedTaxJarResponseData;
+      });
+    const { req, res } = mockRequest(
+      "POST",
+      "checkout_calculate_taxes",
+      "example.com"
+    );
 
     const checkoutPayload = getDummyCheckoutPayload();
     req.body = [checkoutPayload];
 
     // @ts-ignore
     await handler(req, res);
-  
+
     expect(mockedFetchTaxesForCheckout).toHaveBeenCalledWith(
       checkoutPayload,
       getTaxJarConfig()
     );
     const data: CheckoutResponsePayload = res._getJSONData();
-    
+
     expect(data.shipping_price_gross_amount).toBe("12.3");
     expect(data.shipping_price_net_amount).toBe("10");
     expect(data.shipping_tax_rate).toBe("0.23");

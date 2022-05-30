@@ -1,10 +1,10 @@
 import Taxjar from "taxjar";
 import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
-import { CheckoutPayload, TaxJarConfig } from "./types";
+import { CheckoutPayload, FetchTaxesPayload, TaxJarConfig } from "./types";
 
-export const fetchTaxesForCheckout = async (
-  checkoutPayload: CheckoutPayload,
+export const fetchTaxes = async (
+  taxParams: FetchTaxesPayload,
   taxJarConfig: TaxJarConfig
 ) => {
   const client = new Taxjar({
@@ -20,13 +20,13 @@ export const fetchTaxesForCheckout = async (
     from_city: taxJarConfig.shipFrom.fromCity,
     from_street: taxJarConfig.shipFrom.fromStreet,
 
-    to_country: checkoutPayload.address.country,
-    to_zip: checkoutPayload.address.postal_code,
-    to_state: checkoutPayload.address.country_area,
-    to_city: checkoutPayload.address.city,
-    to_street: `${checkoutPayload.address.street_address_1} ${checkoutPayload.address.street_address_2}`,
-    shipping: Number(checkoutPayload.shipping_amount),
-    line_items: checkoutPayload.lines.map((line) => ({
+    to_country: taxParams.address.country,
+    to_zip: taxParams.address.postal_code,
+    to_state: taxParams.address.country_area,
+    to_city: taxParams.address.city,
+    to_street: `${taxParams.address.street_address_1} ${taxParams.address.street_address_2}`,
+    shipping: Number(taxParams.shipping_amount),
+    line_items: taxParams.lines.map((line) => ({
       id: line.id,
       quantity: line.quantity,
       product_tax_code:

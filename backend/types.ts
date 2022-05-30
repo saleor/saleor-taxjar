@@ -25,7 +25,7 @@ type DiscountPayload = {
   amount: string;
 };
 
-type CheckoutLinePayload = {
+type LinePayload = {
   id: string;
   variant_id: string;
   full_name: string;
@@ -53,20 +53,44 @@ export type CheckoutPayload = {
   metadata: Object;
   private_metadata: Object;
   discounts: Array<DiscountPayload>;
-  lines: Array<CheckoutLinePayload>;
+  lines: Array<LinePayload>;
 };
 
-export interface CheckoutLineResponsePayload {
+export type OrderPayload = {
+  id: string;
+  channel: ChannelPayload;
+  address: AddressPayload;
+  user_id: string | null;
+  user_public_metadata: Object;
+  included_taxes_in_prices: boolean;
+  currency: string;
+  shipping_amount: string;
+  shipping_name: string | null;
+  metadata: Object;
+  public_metadata: Object;
+  discounts: Array<DiscountPayload>;
+  lines: Array<LinePayload>;
+};
+
+export type FetchTaxesPayload = {
+  channel: ChannelPayload;
+  address: AddressPayload;
+  shipping_amount: string;
+  shipping_name: string | null;
+  lines: Array<LinePayload>;
+};
+
+export interface LineTaxResponsePayload {
   total_gross_amount: string;
   total_net_amount: string;
   tax_rate: string;
 }
 
-export interface CheckoutResponsePayload {
+export interface ResponseTaxPayload {
   shipping_price_gross_amount: string;
   shipping_price_net_amount: string;
   shipping_tax_rate: string;
-  lines: Array<CheckoutLineResponsePayload>;
+  lines: Array<LineTaxResponsePayload>;
 }
 
 export interface TaxJarAddress {

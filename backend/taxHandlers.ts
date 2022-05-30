@@ -1,23 +1,24 @@
+import { check } from "prettier";
+import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
-import { createOrderTransaction, fetchTaxesForCheckout } from "./taxjarApi";
+import { createOrderTransaction, fetchTaxes } from "./taxjarApi";
 import {
   CheckoutPayload,
-  CheckoutResponsePayload,
+  ResponseTaxPayload,
+  FetchTaxesPayload,
   TaxJarConfig,
+  OrderPayload,
 } from "./types";
 
-export const calculateCheckoutTaxes = async (
-  checkoutPayload: CheckoutPayload,
+const _calculateTaxes = async (
+  taxData: FetchTaxesPayload,
   taxJarConfig: TaxJarConfig
-): Promise<{ data: CheckoutResponsePayload }> => {
-  const taxResposne = await fetchTaxesForCheckout(
-    checkoutPayload,
-    taxJarConfig
-  );
+): Promise<{ data: ResponseTaxPayload }> => {
+  const taxResposne = await fetchTaxes(taxData, taxJarConfig);
   const taxDetails = taxResposne.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
-  let shippingPriceGross = Number(checkoutPayload.shipping_amount);
-  let shippingPriceNet = Number(checkoutPayload.shipping_amount);
+  let shippingPriceGross = Number(taxData.shipping_amount);
+  let shippingPriceNet = Number(taxData.shipping_amount);
   let shippingTaxRate = 0;
 
   if (taxDetails !== undefined) {
@@ -35,7 +36,7 @@ export const calculateCheckoutTaxes = async (
       shipping_price_net_amount: String(shippingPriceNet),
       shipping_tax_rate: String(shippingTaxRate),
       // lines order needs to be the same as for recieved payload.
-      lines: checkoutPayload.lines.map((line) => {
+      lines: taxData.lines.map((line) => {
         let totalGrossAmount = line.total_amount;
         let totalNetAmount = line.total_amount;
         let taxRate = "0";
@@ -57,6 +58,34 @@ export const calculateCheckoutTaxes = async (
       }),
     },
   };
+};
+
+export const calculateCheckoutTaxes = async (
+  checkoutPayload: CheckoutPayload,
+  taxJarConfig: TaxJarConfig
+): Promise<{ data: ResponseTaxPayload }> => {
+  const taxData: FetchTaxesPayload = {
+    address: checkoutPayload.address,
+    lines: checkoutPayload.lines,
+    channel: checkoutPayload.channel,
+    shipping_amount: checkoutPayload.shipping_amount,
+    shipping_name: checkoutPayload.shipping_name,
+  };
+  return await _calculateTaxes(taxData, taxJarConfig);
+};
+
+export const calculateOrderTaxes = async (
+  orderPayload: OrderPayload,
+  taxJarConfig: TaxJarConfig
+): Promise<{ data: ResponseTaxPayload }> => {
+  const taxData: FetchTaxesPayload = {
+    address: orderPayload.address,
+    lines: orderPayload.lines,
+    channel: orderPayload.channel,
+    shipping_amount: orderPayload.shipping_amount,
+    shipping_name: orderPayload.shipping_name,
+  };
+  return await _calculateTaxes(taxData, taxJarConfig);
 };
 
 export const createTaxJarOrder = async (

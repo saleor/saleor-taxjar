@@ -1,6 +1,10 @@
 import { createMocks, RequestMethod } from "node-mocks-http";
 import { TaxForOrderRes } from "taxjar/dist/types/returnTypes";
-import { CheckoutPayload, CheckoutResponsePayload } from "../backend/types";
+import {
+  CheckoutPayload,
+  FetchTaxesPayload,
+  ResponseTaxPayload,
+} from "../backend/types";
 
 export const mockRequest = (
   method: RequestMethod = "GET",
@@ -25,9 +29,8 @@ export const mockRequest = (
   return { req, res };
 };
 
-export const getDummyCheckoutPayload = () => {
-  const checkoutPayload: CheckoutPayload = {
-    id: "Q2hlY2tvdXQ6N2UxODYxY2ItMjBlOS00ZmViLTliOTItMzZmODMzOTczODYy",
+export const getDummyFetchTaxesPayload = () => {
+  const fetchTaxesPayload: FetchTaxesPayload = {
     channel: {
       slug: "channel-pln",
       currency_code: "PLN",
@@ -45,12 +48,8 @@ export const getDummyCheckoutPayload = () => {
       country_area: "",
       phone: "+12125094995",
     },
-    user_id: null,
-    user_public_metadata: {},
-    included_taxes_in_prices: true,
     shipping_amount: "10.00",
     shipping_name: "DB Schenker",
-    discounts: [],
     lines: [
       {
         id: "Q2hlY2tvdXRMaW5lOjU=",
@@ -67,14 +66,11 @@ export const getDummyCheckoutPayload = () => {
         total_amount: "28.00",
       },
     ],
-    private_metadata: {},
-    metadata: {},
-    currency: "PLN",
   };
-  return checkoutPayload;
+  return fetchTaxesPayload;
 };
 
-export const getDummyTaxesResponseForCheckout = (): TaxForOrderRes => ({
+export const getDummyFetchTaxesResponse = (): TaxForOrderRes => ({
   tax: {
     exemption_type: null,
     order_total_amount: 38.0,

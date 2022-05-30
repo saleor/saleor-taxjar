@@ -1,10 +1,69 @@
-subscription OrderCreatedSubscription {
-  event {
-    ... on OrderCreated {
-      order {
+fragment AddressFragment on Address {
+  id
+  firstName
+  lastName
+  streetAddress1
+  streetAddress2
+  city
+  countryArea
+  postalCode
+  country {
+    code
+  }
+}
+fragment OrderLineFragment on OrderLine {
+  productSku
+  productName
+  quantity
+  unitPrice {
+    net {
+      amount
+    }
+  }
+  totalPrice {
+    tax {
+      amount
+    }
+  }
+}
+
+fragment OrderSubscription on Order{
         id
         userEmail
+        created
+        shippingAddress {
+          ...AddressFragment
+        }
+        billingAddress {
+          ...AddressFragment
+        }
+        total {
+          net {
+            amount
+          }
+          tax {
+            amount
+          }
+        }
+        shippingPrice {
+          net {
+            amount
+          }
+        }
+        lines {
+          ...OrderLineFragment
+        }
+}
+fragment OrderCreatedEventSubscription on Event{
+  __typename
+    ... on OrderCreated {
+      order {
+        ...OrderSubscription
       }
     }
+}
+subscription OrderCreatedSubscription {
+  event {
+    ...OrderCreatedEventSubscription
   }
 }

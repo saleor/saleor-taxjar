@@ -26,7 +26,7 @@ const handler: NextApiHandler = async (request, response) => {
     return;
   }
 
-  let body: OrderPayload[] =
+  const body: OrderPayload[] =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const orderPayload: OrderPayload = body[0];

@@ -3,23 +3,25 @@ import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
 import { CheckoutPayload, FetchTaxesPayload, TaxJarConfig } from "./types";
 
-export const fetchTaxes = async (
-  taxParams: FetchTaxesPayload,
-  taxJarConfig: TaxJarConfig
-) => {
-  const client = new Taxjar({
+const getTaxjarClient = (taxJarConfig: TaxJarConfig) =>
+  new Taxjar({
     apiKey: taxJarConfig.apiKey,
     apiUrl: taxJarConfig.sandbox
       ? Taxjar.SANDBOX_API_URL
       : Taxjar.DEFAULT_API_URL,
   });
+
+export const fetchTaxes = async (
+  taxParams: FetchTaxesPayload,
+  taxJarConfig: TaxJarConfig
+) => {
+  const client = getTaxjarClient(taxJarConfig);
   const response: TaxForOrderRes = await client.taxForOrder({
     from_country: taxJarConfig.shipFrom.fromCountry,
     from_zip: taxJarConfig.shipFrom.fromZip,
     from_state: taxJarConfig.shipFrom.fromState,
     from_city: taxJarConfig.shipFrom.fromCity,
     from_street: taxJarConfig.shipFrom.fromStreet,
-
     to_country: taxParams.address.country,
     to_zip: taxParams.address.postal_code,
     to_state: taxParams.address.country_area,
@@ -40,20 +42,15 @@ export const fetchTaxes = async (
   return response;
 };
 
-export const createOrderTransaction = async (
+export const createOrderTransaction = (
   order: OrderSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ) => {
-  const client = new Taxjar({
-    apiKey: taxJarConfig.apiKey,
-    apiUrl: taxJarConfig.sandbox
-      ? Taxjar.SANDBOX_API_URL
-      : Taxjar.DEFAULT_API_URL,
-  });
+  const client = getTaxjarClient(taxJarConfig);
 
   const address = order.shippingAddress || order.billingAddress!;
 
-  const response = await client.createOrder({
+  const response = client.createOrder({
     from_country: taxJarConfig.shipFrom.fromCountry,
     from_zip: taxJarConfig.shipFrom.fromZip,
     from_state: taxJarConfig.shipFrom.fromState,

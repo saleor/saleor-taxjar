@@ -10,7 +10,7 @@ export const getTaxJarConfig = () => {
       fromStreet: process.env.TAXJAR_FROM_STREET!,
     },
     apiKey: process.env.TAXJAR_API_KEY!,
-    sandbox: process.env.TAXJAR_SANDBOX === "false" ? false : true,
+    sandbox: process.env.TAXJAR_SANDBOX !== "false",
   };
   return taxJarConfig;
 };

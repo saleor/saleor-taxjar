@@ -2,8 +2,8 @@ import { createOrderTransaction } from "../../../backend/taxjarApi";
 import { getTaxJarConfig } from "../../../backend/utils";
 import handler from "../../../pages/api/webhooks/order-created";
 import {
-  getDummyOrderCreatedPayload,
-  getDummyTaxesResponseForCreatedOrder,
+  dummyOrderCreatedPayload,
+  dummyTaxesResponseForCreatedOrder,
   mockRequest,
 } from "../../utils";
 
@@ -18,9 +18,13 @@ describe("api/webhooks/order-created", () => {
 
   it("rejects when saleor domain is missing", async () => {
     const domain = undefined;
-    const { req, res } = mockRequest("POST", "order_created", domain);
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_created",
+      domain,
+    });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
     // @ts-ignore
@@ -32,9 +36,13 @@ describe("api/webhooks/order-created", () => {
 
   it("rejects when saleor event is missing", async () => {
     const event = undefined;
-    const { req, res } = mockRequest("POST", event, "example.com");
+    const { req, res } = mockRequest({
+      method: "POST",
+      event,
+      domain: "example.com",
+    });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
     // @ts-ignore
@@ -46,20 +54,20 @@ describe("api/webhooks/order-created", () => {
 
   it("rejects when saleor signature is empty", async () => {
     const signature = undefined;
-    const { req, res } = mockRequest(
-      "POST",
-      "order_created",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_created",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyTaxesResponseForCreatedOrder();
+    const mockedTaxJarResponseData = dummyTaxesResponseForCreatedOrder;
     const mockedTaxJarResponse =
       mockedCreateOrderTransaction.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
     // @ts-ignore
@@ -71,20 +79,20 @@ describe("api/webhooks/order-created", () => {
 
   it("rejects when saleor signature is incorrect", async () => {
     const signature = "incorrect-sig";
-    const { req, res } = mockRequest(
-      "POST",
-      "order_created",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_created",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyTaxesResponseForCreatedOrder();
+    const mockedTaxJarResponseData = dummyTaxesResponseForCreatedOrder;
     const mockedTaxJarResponse =
       mockedCreateOrderTransaction.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
     // @ts-ignore
@@ -95,14 +103,18 @@ describe("api/webhooks/order-created", () => {
   });
 
   it("creates transaction on TaxJar side for new order", async () => {
-    const mockedTaxJarResponseData = getDummyTaxesResponseForCreatedOrder();
+    const mockedTaxJarResponseData = dummyTaxesResponseForCreatedOrder;
     const mockedTaxJarResponse =
       mockedCreateOrderTransaction.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
-    const { req, res } = mockRequest("POST", "order_created", "example.com");
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_created",
+      domain: "example.com",
+    });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
     // @ts-ignore
@@ -116,14 +128,18 @@ describe("api/webhooks/order-created", () => {
   });
 
   it("skips when order has different address than US", async () => {
-    const mockedTaxJarResponseData = getDummyTaxesResponseForCreatedOrder();
+    const mockedTaxJarResponseData = dummyTaxesResponseForCreatedOrder;
     const mockedTaxJarResponse =
       mockedCreateOrderTransaction.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
-    const { req, res } = mockRequest("POST", "order_created", "example.com");
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_created",
+      domain: "example.com",
+    });
 
-    const orderPayload = getDummyOrderCreatedPayload();
+    const orderPayload = dummyOrderCreatedPayload;
 
     orderPayload.order.shippingAddress.country.code = "PL";
     req.body = orderPayload;

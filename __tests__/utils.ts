@@ -5,72 +5,70 @@ import {
   FetchTaxesPayload,
   ResponseTaxPayload,
 } from "../backend/types";
-
-export const mockRequest = (
-  method: RequestMethod = "GET",
-  event?: string,
-  domain?: string,
-  signature?: string
-) => {
+type RequestConfiguration = {
+  method: RequestMethod;
+  event?: string;
+  domain?: string;
+  signature?: string;
+};
+export const mockRequest = (configuration: RequestConfiguration) => {
+  const method = configuration.method;
   const { req, res } = createMocks({ method });
   req.headers = {
     "Content-Type": "application/json",
   };
-  if (domain !== undefined) {
-    req.headers["saleor-domain"] = domain;
+  if (configuration.domain !== undefined) {
+    req.headers["saleor-domain"] = configuration.domain;
   }
-  if (event !== undefined) {
-    req.headers["saleor-event"] = event;
+  if (configuration.event !== undefined) {
+    req.headers["saleor-event"] = configuration.event;
   }
-  if (signature !== undefined) {
-    req.headers["x-saleor-signature"] = signature;
+  if (configuration.signature !== undefined) {
+    req.headers["x-saleor-signature"] = configuration.signature;
   }
 
   return { req, res };
 };
 
-export const getDummyFetchTaxesPayload = () => {
-  const fetchTaxesPayload: FetchTaxesPayload = {
-    channel: {
-      slug: "channel-pln",
-      currency_code: "PLN",
+export const dummyFetchTaxesPayload: FetchTaxesPayload = {
+  channel: {
+    slug: "channel-pln",
+    currency_code: "PLN",
+  },
+  address: {
+    first_name: "Ann22a",
+    last_name: "Joa22nna",
+    company_name: "",
+    street_address_1: "8559 Lakes Avenue",
+    street_address_2: "",
+    city: "POOLE",
+    city_area: "",
+    postal_code: "BH15 1AB",
+    country: "GB",
+    country_area: "",
+    phone: "+12125094995",
+  },
+  shipping_amount: "10.00",
+  shipping_name: "DB Schenker",
+  lines: [
+    {
+      id: "Q2hlY2tvdXRMaW5lOjU=",
+      sku: "21438542",
+      variant_id: "UHJvZHVjdFZhcmlhbnQ6MjI1",
+      quantity: 1,
+      charge_taxes: true,
+      full_name: "Bean Juice (2l)",
+      product_name: "Bean Juice",
+      variant_name: "2l",
+      product_metadata: {},
+      product_type_metadata: {},
+      unit_amount: "28.00",
+      total_amount: "28.00",
     },
-    address: {
-      first_name: "Ann22a",
-      last_name: "Joa22nna",
-      company_name: "",
-      street_address_1: "8559 Lakes Avenue",
-      street_address_2: "",
-      city: "POOLE",
-      city_area: "",
-      postal_code: "BH15 1AB",
-      country: "GB",
-      country_area: "",
-      phone: "+12125094995",
-    },
-    shipping_amount: "10.00",
-    shipping_name: "DB Schenker",
-    lines: [
-      {
-        id: "Q2hlY2tvdXRMaW5lOjU=",
-        sku: "21438542",
-        variant_id: "UHJvZHVjdFZhcmlhbnQ6MjI1",
-        quantity: 1,
-        charge_taxes: true,
-        full_name: "Bean Juice (2l)",
-        product_name: "Bean Juice",
-        variant_name: "2l",
-        product_metadata: {},
-        product_type_metadata: {},
-        unit_amount: "28.00",
-        total_amount: "28.00",
-      },
-    ],
-  };
-  return fetchTaxesPayload;
+  ],
 };
 
-export const getDummyFetchTaxesResponse = (): TaxForOrderRes => ({
+export const dummyFetchTaxesResponse: TaxForOrderRes = {
   tax: {
     exemption_type: null,
     order_total_amount: 38.0,
@@ -122,9 +120,9 @@ export const getDummyFetchTaxesResponse = (): TaxForOrderRes => ({
       ],
     },
   },
-});
+};
 
-export const getDummyOrderCreatedPayload = () => ({
+export const dummyOrderCreatedPayload = {
   __typename: "OrderCreated",
   order: {
     id: "T3JkZXI6ZThkYWJjMDItYmM3Zi00ZWZjLWFlODgtYWJjMTUwMmE2Zjdm",
@@ -187,9 +185,9 @@ export const getDummyOrderCreatedPayload = () => ({
       },
     ],
   },
-});
+};
 
-export const getDummyTaxesResponseForCreatedOrder = () => ({
+export const dummyTaxesResponseForCreatedOrder = {
   order: {
     transaction_id: "T3JkZXI6ZjIxNGE1MzgtZTJmMS00NGQ1LTljNGQtMDgwODFlZTNiYTI1",
     user_id: 189995,
@@ -224,4 +222,4 @@ export const getDummyTaxesResponseForCreatedOrder = () => ({
       },
     ],
   },
-});
+};

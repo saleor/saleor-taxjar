@@ -10,39 +10,40 @@ import {
   OrderPayload,
 } from "./types";
 
-const _calculateTaxes = async (
+const calculateTaxes = async (
   taxData: FetchTaxesPayload,
   taxJarConfig: TaxJarConfig
 ): Promise<{ data: ResponseTaxPayload }> => {
   const taxResposne = await fetchTaxes(taxData, taxJarConfig);
   const taxDetails = taxResposne.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
-  let shippingPriceGross = Number(taxData.shipping_amount);
-  let shippingPriceNet = Number(taxData.shipping_amount);
-  let shippingTaxRate = 0;
 
-  if (taxDetails !== undefined) {
-    if (shippingDetails !== undefined) {
-      shippingPriceGross =
-        shippingDetails.taxable_amount + shippingDetails.tax_collectable;
-      shippingPriceNet = shippingDetails.taxable_amount;
-      shippingTaxRate = shippingDetails.combined_tax_rate;
-    }
+  let shippingPriceGross = taxData.shipping_amount;
+  let shippingPriceNet = taxData.shipping_amount;
+  let shippingTaxRate = "0";
+
+  if (shippingDetails) {
+    shippingPriceGross = String(
+      shippingDetails.taxable_amount + shippingDetails.tax_collectable
+    );
+    shippingPriceNet = String(shippingDetails.taxable_amount);
+    shippingTaxRate = String(shippingDetails.combined_tax_rate);
   }
 
   return {
     data: {
-      shipping_price_gross_amount: String(shippingPriceGross),
-      shipping_price_net_amount: String(shippingPriceNet),
-      shipping_tax_rate: String(shippingTaxRate),
+      shipping_price_gross_amount: shippingPriceGross,
+      shipping_price_net_amount: shippingPriceNet,
+      shipping_tax_rate: shippingTaxRate,
       // lines order needs to be the same as for recieved payload.
       lines: taxData.lines.map((line) => {
         let totalGrossAmount = line.total_amount;
         let totalNetAmount = line.total_amount;
         let taxRate = "0";
-        if (taxDetails !== undefined && taxDetails.line_items !== undefined) {
+
+        if (taxDetails?.line_items) {
           const lineTax = taxDetails.line_items.find((l) => l.id === line.id);
-          if (lineTax !== undefined) {
+          if (lineTax) {
             totalGrossAmount = String(
               lineTax.taxable_amount + lineTax.tax_collectable
             );
@@ -71,7 +72,7 @@ export const calculateCheckoutTaxes = async (
     shipping_amount: checkoutPayload.shipping_amount,
     shipping_name: checkoutPayload.shipping_name,
   };
-  return await _calculateTaxes(taxData, taxJarConfig);
+  return await calculateTaxes(taxData, taxJarConfig);
 };
 
 export const calculateOrderTaxes = async (
@@ -85,10 +86,10 @@ export const calculateOrderTaxes = async (
     shipping_amount: orderPayload.shipping_amount,
     shipping_name: orderPayload.shipping_name,
   };
-  return await _calculateTaxes(taxData, taxJarConfig);
+  return await calculateTaxes(taxData, taxJarConfig);
 };
 
-export const createTaxJarOrder = async (
+export const createTaxJarOrder = (
   order: OrderSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ) => {
@@ -97,6 +98,6 @@ export const createTaxJarOrder = async (
   // TaxJar currently supports reporting and filing ONLY in the United States.
   // https://developers.taxjar.com/api/reference/?javascript#transactions
   if (countryCode === "US") {
-    await createOrderTransaction(order, taxJarConfig);
+    createOrderTransaction(order, taxJarConfig);
   }
 };

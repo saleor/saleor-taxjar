@@ -3,8 +3,8 @@ import { ResponseTaxPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 import handler from "../../../pages/api/webhooks/order-calculate-taxes";
 import {
-  getDummyFetchTaxesPayload,
-  getDummyFetchTaxesResponse,
+  dummyFetchTaxesPayload,
+  dummyFetchTaxesResponse,
   mockRequest,
 } from "../../utils";
 
@@ -19,9 +19,13 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
   it("rejects when saleor domain is missing", async () => {
     const domain = undefined;
-    const { req, res } = mockRequest("POST", "order_calculate_taxes", domain);
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_calculate_taxes",
+      domain,
+    });
 
-    const orderPayload = getDummyFetchTaxesPayload();
+    const orderPayload = dummyFetchTaxesPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -33,9 +37,13 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
   it("rejects when saleor event is missing", async () => {
     const event = undefined;
-    const { req, res } = mockRequest("POST", event, "example.com");
+    const { req, res } = mockRequest({
+      method: "POST",
+      event,
+      domain: "example.com",
+    });
 
-    const orderPayload = getDummyFetchTaxesPayload();
+    const orderPayload = dummyFetchTaxesPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -47,18 +55,18 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
   it("rejects when saleor signature is empty", async () => {
     const signature = undefined;
-    const { req, res } = mockRequest(
-      "POST",
-      "order_calculate_taxes",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_calculate_taxes",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
       return mockedTaxJarResponseData;
     });
-    const orderPayload = getDummyFetchTaxesPayload();
+    const orderPayload = dummyFetchTaxesPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -70,18 +78,18 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
   it("rejects when saleor signature is incorrect", async () => {
     const signature = "incorrect-sig";
-    const { req, res } = mockRequest(
-      "POST",
-      "order_calculate_taxes",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_calculate_taxes",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
       return mockedTaxJarResponseData;
     });
-    const orderPayload = getDummyFetchTaxesPayload();
+    const orderPayload = dummyFetchTaxesPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -92,17 +100,17 @@ describe("api/webhooks/order-calculate-taxes", () => {
   });
 
   it("fetches taxes for order", async () => {
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
       return mockedTaxJarResponseData;
     });
-    const { req, res } = mockRequest(
-      "POST",
-      "order_calculate_taxes",
-      "example.com"
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_calculate_taxes",
+      domain: "example.com",
+    });
 
-    const orderPayload = getDummyFetchTaxesPayload();
+    const orderPayload = dummyFetchTaxesPayload;
     req.body = [orderPayload];
 
     // @ts-ignore

@@ -26,7 +26,7 @@ const handler: NextApiHandler = async (request, response) => {
     return;
   }
 
-  let body: CheckoutPayload[] =
+  const body: CheckoutPayload[] =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const checkoutPayload: CheckoutPayload = body[0];

@@ -3,8 +3,8 @@ import { ResponseTaxPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 import handler from "../../../pages/api/webhooks/checkout-calculate-taxes";
 import {
-  getDummyFetchTaxesPayload,
-  getDummyFetchTaxesResponse,
+  dummyFetchTaxesPayload,
+  dummyFetchTaxesResponse,
   mockRequest,
 } from "../../utils";
 
@@ -19,13 +19,13 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
   it("rejects when saleor domain is missing", async () => {
     const domain = undefined;
-    const { req, res } = mockRequest(
-      "POST",
-      "checkout_calculate_taxes",
-      domain
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain,
+    });
 
-    const checkoutPayload = getDummyFetchTaxesPayload();
+    const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore
@@ -37,9 +37,13 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
   it("rejects when saleor event is missing", async () => {
     const event = undefined;
-    const { req, res } = mockRequest("POST", event, "example.com");
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: event,
+      domain: "example.com",
+    });
 
-    const checkoutPayload = getDummyFetchTaxesPayload();
+    const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore
@@ -51,19 +55,19 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
   it("rejects when saleor signature is empty", async () => {
     const signature = undefined;
-    const { req, res } = mockRequest(
-      "POST",
-      "checkout_calculate_taxes",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse =
       mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
-    const checkoutPayload = getDummyFetchTaxesPayload();
+    const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore
@@ -75,19 +79,19 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
   it("rejects when saleor signature is incorrect", async () => {
     const signature = "incorrect-sig";
-    const { req, res } = mockRequest(
-      "POST",
-      "checkout_calculate_taxes",
-      "example.com",
-      signature
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: "example.com",
+      signature,
+    });
 
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse =
       mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
-    const checkoutPayload = getDummyFetchTaxesPayload();
+    const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore
@@ -98,18 +102,18 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
   });
 
   it("fetches taxes for checkout", async () => {
-    const mockedTaxJarResponseData = getDummyFetchTaxesResponse();
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const mockedTaxJarResponse =
       mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
         return mockedTaxJarResponseData;
       });
-    const { req, res } = mockRequest(
-      "POST",
-      "checkout_calculate_taxes",
-      "example.com"
-    );
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: "example.com",
+    });
 
-    const checkoutPayload = getDummyFetchTaxesPayload();
+    const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore

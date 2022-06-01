@@ -5,6 +5,7 @@ import handler from "../../../pages/api/webhooks/order-calculate-taxes";
 import {
   dummyFetchTaxesPayload,
   dummyFetchTaxesResponse,
+  dummyOrderPayload,
   mockRequest,
 } from "../../utils";
 
@@ -25,7 +26,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
       domain,
     });
 
-    const orderPayload = dummyFetchTaxesPayload;
+    const orderPayload = dummyOrderPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -43,7 +44,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
       domain: "example.com",
     });
 
-    const orderPayload = dummyFetchTaxesPayload;
+    const orderPayload = dummyOrderPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -66,7 +67,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
     const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
       return mockedTaxJarResponseData;
     });
-    const orderPayload = dummyFetchTaxesPayload;
+    const orderPayload = dummyOrderPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -89,7 +90,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
     const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
       return mockedTaxJarResponseData;
     });
-    const orderPayload = dummyFetchTaxesPayload;
+    const orderPayload = dummyOrderPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
@@ -110,14 +111,14 @@ describe("api/webhooks/order-calculate-taxes", () => {
       domain: "example.com",
     });
 
-    const orderPayload = dummyFetchTaxesPayload;
+    const orderPayload = dummyOrderPayload;
     req.body = [orderPayload];
 
     // @ts-ignore
     await handler(req, res);
 
     expect(mockedFetchTaxes).toHaveBeenCalledWith(
-      orderPayload,
+      dummyFetchTaxesPayload,
       getTaxJarConfig()
     );
     const data: ResponseTaxPayload = res._getJSONData();
@@ -127,8 +128,40 @@ describe("api/webhooks/order-calculate-taxes", () => {
     expect(data.shipping_tax_rate).toBe("0.23");
     expect(data.lines.length).toBe(1);
     expect(data.lines[0].total_gross_amount).toBe("34.44");
-    expect(data.lines[0].total_net_amount).toBe("28");
+    expect(data.lines[0].total_net_amount).toBe("28.00");
     expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("propagates discounts over lines", async () => {
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
+    const mockedTaxJarResponse = mockedFetchTaxes.mockImplementationOnce(() => {
+      return mockedTaxJarResponseData;
+    });
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "order_calculate_taxes",
+      domain: "example.com",
+    });
+
+    const orderPayload = dummyOrderPayload;
+    orderPayload.discounts = [{amount: "2"}, {amount: "1"}]
+    const linePayload = orderPayload.lines[0]
+    orderPayload.lines = [linePayload, linePayload]
+
+    req.body = [orderPayload];
+
+    // @ts-ignore
+    await handler(req, res);
+
+    const fetchTaxesLine = dummyFetchTaxesPayload.lines[0]
+    fetchTaxesLine.discount = 1.5;
+    dummyFetchTaxesPayload.lines = [fetchTaxesLine, fetchTaxesLine]
+
+    expect(mockedFetchTaxes).toHaveBeenCalledWith(
+      dummyFetchTaxesPayload,
+      getTaxJarConfig()
+    );
     expect(res.statusCode).toBe(200);
   });
 });

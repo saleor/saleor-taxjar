@@ -1,8 +1,10 @@
+
 import { fetchTaxes } from "../../../backend/taxjarApi";
-import { ResponseTaxPayload } from "../../../backend/types";
+import { FetchTaxesLinePayload, ResponseTaxPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 import handler from "../../../pages/api/webhooks/checkout-calculate-taxes";
 import {
+  dummyCheckoutPayload,
   dummyFetchTaxesPayload,
   dummyFetchTaxesResponse,
   mockRequest,
@@ -113,14 +115,14 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       domain: "example.com",
     });
 
-    const checkoutPayload = dummyFetchTaxesPayload;
+    const checkoutPayload = dummyCheckoutPayload;
     req.body = [checkoutPayload];
 
     // @ts-ignore
     await handler(req, res);
 
     expect(mockedFetchTaxesForCheckout).toHaveBeenCalledWith(
-      checkoutPayload,
+      dummyFetchTaxesPayload,
       getTaxJarConfig()
     );
     const data: ResponseTaxPayload = res._getJSONData();
@@ -130,8 +132,41 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     expect(data.shipping_tax_rate).toBe("0.23");
     expect(data.lines.length).toBe(1);
     expect(data.lines[0].total_gross_amount).toBe("34.44");
-    expect(data.lines[0].total_net_amount).toBe("28");
+    expect(data.lines[0].total_net_amount).toBe("28.00");
     expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("propagates discounts over lines", async () => {
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
+    const mockedTaxJarResponse =
+      mockedFetchTaxesForCheckout.mockImplementationOnce(() => {
+        return mockedTaxJarResponseData;
+      });
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: "example.com",
+    });
+
+    const checkoutPayload = dummyCheckoutPayload;
+    checkoutPayload.discounts = [{amount: "2"}, {amount: "1"}]
+    const linePayload = checkoutPayload.lines[0]
+    checkoutPayload.lines = [linePayload, linePayload]
+    req.body = [checkoutPayload];
+
+    // @ts-ignore
+    await handler(req, res);
+
+    const fetchTaxesLine = dummyFetchTaxesPayload.lines[0]
+    fetchTaxesLine.discount = 1.5;
+    dummyFetchTaxesPayload.lines = [fetchTaxesLine, fetchTaxesLine]
+
+    expect(mockedFetchTaxesForCheckout).toHaveBeenCalledWith(
+      dummyFetchTaxesPayload,
+      getTaxJarConfig()
+    );
+
     expect(res.statusCode).toBe(200);
   });
 });

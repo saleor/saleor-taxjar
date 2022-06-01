@@ -20,12 +20,12 @@ type AddressPayload = {
   phone: string;
 };
 
-type DiscountPayload = {
+export type DiscountPayload = {
   name?: string;
   amount: string;
 };
 
-type LinePayload = {
+export type LinePayload = {
   id: string;
   variant_id: string;
   full_name: string;
@@ -67,17 +67,26 @@ export type OrderPayload = {
   shipping_amount: string;
   shipping_name: string | null;
   metadata: Object;
-  public_metadata: Object;
+  private_metadata: Object;
   discounts: Array<DiscountPayload>;
   lines: Array<LinePayload>;
 };
-
+export type FetchTaxesLinePayload = {
+  id: string;
+  quantity: number;
+  productMetadata: ProductMetaField;
+  productTypeMetadata: ProductMetaField;
+  discount: number;
+  chargeTaxes: boolean;
+  unitAmount: number;
+  totalAmount: number;
+}
 export type FetchTaxesPayload = {
   channel: ChannelPayload;
   address: AddressPayload;
   shipping_amount: string;
   shipping_name: string | null;
-  lines: Array<LinePayload>;
+  lines: Array<FetchTaxesLinePayload>;
 };
 
 export interface LineTaxResponsePayload {

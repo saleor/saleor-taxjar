@@ -32,11 +32,10 @@ export const fetchTaxes = async (
       id: line.id,
       quantity: line.quantity,
       product_tax_code:
-        line.product_metadata.taxjar_tax_code ||
-        line.product_type_metadata.taxjar_tax_code,
-      unit_price: Number(line.unit_amount),
-      // FIXME: take into account a discount that we recieve in CheckoutPayload
-      discount: 0,
+        line.productMetadata.taxjar_tax_code ||
+        line.productTypeMetadata.taxjar_tax_code,
+      unit_price: line.unitAmount,
+      discount: line.discount,
     })),
   });
   return response;

@@ -18,7 +18,7 @@ const getDiscountForLine = (
   totalDiscount: number,
   allLinesTotal: number
 ) => {
-  if (totalDiscount === 0) {
+  if (totalDiscount === 0 || allLinesTotal == 0) {
     return 0;
   }
   const lineTotalAmount = Number(line.total_amount);

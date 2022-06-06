@@ -21,6 +21,7 @@ specifiers:
   '@urql/exchange-auth': ^0.1.7
   autoprefixer: ^10.4.7
   babel-plugin-formatjs: ^10.3.23
+  clsx: ^1.1.1
   eslint: 8.15.0
   eslint-config-next: 12.1.6
   fast-glob: ^3.2.11
@@ -50,6 +51,7 @@ dependencies:
   '@saleor/app-bridge': 0.1.7
   '@saleor/macaw-ui': 0.6.0_dwbzrken4nfb5rtm4ocsdfcpvu
   '@urql/exchange-auth': 0.1.7_graphql@16.5.0
+  clsx: 1.1.1
   fast-glob: 3.2.11
   graphql: 16.5.0
   graphql-tag: 2.12.6_graphql@16.5.0

@@ -17,6 +17,7 @@
     "@saleor/app-bridge": "^0.1.7",
     "@saleor/macaw-ui": "^0.6.0",
     "@urql/exchange-auth": "^0.1.7",
+    "clsx": "^1.1.1",
     "fast-glob": "^3.2.11",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",

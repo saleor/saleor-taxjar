@@ -11,26 +11,74 @@ import {
   UpdateAppMetadataMutation,
   MetadataItem,
   MetadataInput,
+  ChannelsQuery,
+  ChannelsDocument,
+  ChannelDataFragment
 } from "../../generated/graphql";
 
-const CONFIGURATION_KEYS = [
-  "THAT_SECRET",
-  "THIS_VALUE",
-];
+type ConfigurationField = {
+  key: string;
+  value: string | boolean;
+  label: string;
+  type: "TEXT" | "BOOLEAN";
+};
 
-const prepareMetadataFromRequest = (input: MetadataInput[] | MetadataItem[]) =>
-  input
-    .filter(({ key }) => CONFIGURATION_KEYS.includes(key))
-    .map(({ key, value }) => ({ key, value }));
+type ConfigurationPayloadShipFrom = {
+  fromCountry: string;
+  fromZip: string;
+  fromCity: string;
+  fromStreet: string;
+  fromState: string;
+};
 
-const prepareResponseFromMetadata = (input: MetadataItem[]) => {
-  const output: MetadataInput[] = [];
-  for (const configurationKey of CONFIGURATION_KEYS) {
-    output.push(
-      input.find(({ key }) => key === configurationKey) ?? { key: configurationKey, value: "" }
-    );
+type ChannelConfigurationPayload = {
+  apiKey: string;
+  active: boolean;
+  sandbox: boolean;
+  shipFrom: ConfigurationPayloadShipFrom;
+};
+
+type ConfigurationPayload = {
+  [channelID in string]: ChannelConfigurationPayload;
+};
+
+
+const prepareMetadataFromRequest = (
+  input: ConfigurationPayload
+): MetadataInput[] => {
+  let response: MetadataInput[] = [];
+  Object.entries(input).forEach(([channelID, settings]) => {
+    response.push({ key: channelID, value: JSON.stringify(settings) });
+  });
+  return response;
+};
+
+const prepareResponseFromMetadata = (
+  input: MetadataItem[],
+  channels?: ChannelDataFragment[]
+): ConfigurationPayload => {
+  let config: ConfigurationPayload = {};
+  if (!channels){
+    return config;
   }
-  return output.map(({ key, value }) => ({ key, value }));
+  for (const channel of channels) {
+    const item = input.find((item)=> item.key == channel.id)
+    const parsedConfiguration = item? JSON.parse(item.value): {}
+    const shipFrom = parsedConfiguration.shipFrom;
+    config[channel.id] = {
+      active: parsedConfiguration.active || false,
+      apiKey: parsedConfiguration.apiKey || "",
+      sandbox: parsedConfiguration.sandbox || true,
+      shipFrom: {
+        fromCity: shipFrom?.fromCity || "",
+        fromCountry: shipFrom?.fromCountry|| "",
+        fromState: shipFrom?.fromState|| "",
+        fromStreet: shipFrom?.fromStreet|| "",
+        fromZip: shipFrom?.fromZip|| "",
+      },
+    };
+  }
+  return config;
 };
 
 const handler: NextApiHandler = async (request, response) => {
@@ -39,8 +87,7 @@ const handler: NextApiHandler = async (request, response) => {
   try {
     saleorDomain = domainMiddleware(request) as string;
     await jwtVerifyMiddleware(request);
-  }
-  catch (e: unknown) {
+  } catch (e: unknown) {
     const error = e as MiddlewareError;
 
     console.error(error);
@@ -49,34 +96,66 @@ const handler: NextApiHandler = async (request, response) => {
       .json({ success: false, message: error.message });
     return;
   }
-
   const client = createClient(
     `https://${saleorDomain}/graphql/`,
-    async () => Promise.resolve({ token: getAuthToken() }),
+    async () => Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;
+  let channels;
   switch (request.method!) {
     case "GET":
-      privateMetadata  = (
-        (await client.query<FetchAppMetadataQuery>(FetchAppMetadataDocument).toPromise()).data
-      )?.app?.privateMetadata!;
-
-      response.json({ success: true, data: prepareResponseFromMetadata(privateMetadata) });
+      privateMetadata = (
+        await client
+          .query<FetchAppMetadataQuery>(FetchAppMetadataDocument)
+          .toPromise()
+      ).data?.app?.privateMetadata;
+      channels = await (
+        await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
+      ).data?.channels;
+      if (privateMetadata && channels) {
+        response.json({
+          success: true,
+          data: prepareResponseFromMetadata(privateMetadata, channels),
+        });
+      } else {
+        response.json({
+          success: false,
+          message: "Unable to fetch app configuration.",
+        });
+      }
       break;
     case "POST":
       const appId = (
-        (await client.query<FetchAppMetadataQuery>(FetchAppMetadataDocument).toPromise()).data
-      )?.app?.id;
+        await client
+          .query<FetchAppMetadataQuery>(FetchAppMetadataDocument)
+          .toPromise()
+      ).data?.app?.id;
 
       privateMetadata = (
-        (await client.mutation<UpdateAppMetadataMutation>(
-          UpdateAppMetadataDocument,
-          { id: appId, input: prepareMetadataFromRequest(request.body.data) }
-        ).toPromise()).data
-      )?.updatePrivateMetadata?.item?.privateMetadata!;
+        await client
+          .mutation<UpdateAppMetadataMutation>(UpdateAppMetadataDocument, {
+            id: appId,
+            input: prepareMetadataFromRequest(request.body.data),
+          })
+          .toPromise()
+      ).data?.updatePrivateMetadata?.item?.privateMetadata!;
 
-      response.json({ success: true, data: prepareResponseFromMetadata(privateMetadata) });
+      channels = await (
+        await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
+      ).data?.channels;
+      
+      if (privateMetadata && channels) {
+        response.json({
+          success: true,
+          data: prepareResponseFromMetadata(privateMetadata, channels),
+        });
+      } else {
+        response.json({
+          success: false,
+          message: "Unable to fetch app configuration.",
+        });
+      }
       break;
     default:
       response

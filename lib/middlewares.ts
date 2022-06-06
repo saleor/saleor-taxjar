@@ -28,11 +28,17 @@ export const eventMiddleware = (
     throw new MiddlewareError("Invalid event.", 400);
   }
 };
+export const requestType = (request: NextApiRequest) => {
+  if (request.method !== "POST") {
+    throw new MiddlewareError("Only POST requests allowed", 405)
+  }
+}
 
 export const webhookMiddleware = (
   request: NextApiRequest,
   expectedEvent: string
 ) => {
+  requestType(request);
   domainMiddleware(request);
   eventMiddleware(request, expectedEvent);
 };

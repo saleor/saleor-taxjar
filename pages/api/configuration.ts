@@ -110,7 +110,7 @@ const handler: NextApiHandler = async (request, response) => {
           .query<FetchAppMetadataQuery>(FetchAppMetadataDocument)
           .toPromise()
       ).data?.app?.privateMetadata;
-      channels = await (
+      channels = (
         await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
       ).data?.channels;
       if (privateMetadata && channels) {
@@ -141,7 +141,7 @@ const handler: NextApiHandler = async (request, response) => {
           .toPromise()
       ).data?.updatePrivateMetadata?.item?.privateMetadata!;
 
-      channels = await (
+      channels = (
         await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
       ).data?.channels;
       

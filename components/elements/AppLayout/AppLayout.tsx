@@ -1,5 +1,6 @@
 import { IconButton, SettingsIcon } from "@saleor/macaw-ui";
-import { Item } from "../../../../types/common";
+import React from "react";
+import { Item } from "../../../types/common";
 import AppHeader from "../AppHeader";
 import AppSidebar from "../AppSidebar";
 import { useStyles } from "./styles";
@@ -14,7 +15,7 @@ interface AppLayoutProps {
   onItemClick: (item: Item) => void;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({
+const AppLayout: React.FC<React.PropsWithChildren<AppLayoutProps>> = ({
   title,
   items,
   selectedItem,

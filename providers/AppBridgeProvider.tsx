@@ -1,18 +1,20 @@
-import { App, createApp } from "@saleor/app-bridge";
-import { createContext, useMemo, PropsWithChildren, useState, useEffect } from "react";
+import { app } from "@/misc/app";
+import { App } from "@saleor/app-bridge";
+import { createContext, PropsWithChildren, useState, useEffect } from "react";
 
 interface IAppContext {
   app?: App;
-  isAuthorized: boolean,
+  isAuthorized: boolean;
 }
 
-const app = typeof window !== "undefined" ? createApp():undefined; 
-
-
-export const AppContext = createContext<IAppContext>({ app: undefined , isAuthorized: false,});
+export const AppContext = createContext<IAppContext>({
+  app: undefined,
+  isAuthorized: false,
+});
 
 const AppBridgeProvider: React.FC<PropsWithChildren<{}>> = (props) => {
   const [isAuthorized, setIsAuthorized] = useState(!!app?.getState()?.token);
+
   useEffect(() => {
     if (app) {
       const unsubscribe = app.subscribe("handshake", (payload) => {
@@ -24,6 +26,7 @@ const AppBridgeProvider: React.FC<PropsWithChildren<{}>> = (props) => {
       };
     }
   }, []);
+
   return <AppContext.Provider value={{ app, isAuthorized }} {...props} />;
 };
 

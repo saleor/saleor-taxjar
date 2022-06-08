@@ -5,6 +5,7 @@ export const useStyles = makeStyles(
     root: {
       display: "flex",
       gap: "2rem",
+      marginBottom: theme.spacing(12),
     },
     content: {
       flex: "2",

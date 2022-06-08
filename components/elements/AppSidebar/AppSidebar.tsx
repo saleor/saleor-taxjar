@@ -1,3 +1,4 @@
+import { Item } from "@/types/common";
 import Skeleton from "@material-ui/lab/Skeleton";
 import {
   OffsettedList,
@@ -6,7 +7,6 @@ import {
   OffsettedListItemCell,
 } from "@saleor/macaw-ui";
 import clsx from "clsx";
-import { Item } from "../../../../types/common";
 import { useStyles } from "./styles";
 
 interface AppSidebarProps {

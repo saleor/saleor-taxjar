@@ -1,25 +1,23 @@
 import { envVars } from "@/constants";
-import { FetchResponse } from "../hooks/useFetch";
+import { FetchResponse } from "../frontend/hooks/useFetch";
 import { getAuthHeaders } from "@/misc/auth";
-import {
-  ChannelConfigurationPayload,
-  ConfigurationPayload,
-} from "../types/api";
+import { ConfigurationPayload } from "../types/api";
 
-export interface ConfigurationResult {
+export interface ConfigurationRequest {
   data: ConfigurationPayload;
 }
 
-export const requestGetConfiguration = (): FetchResponse<ConfigurationResult> =>
-  fetch(`${envVars.appUrl}/api/configuration`, {
-    method: "GET",
-    // @ts-ignore
-    headers: getAuthHeaders(),
-  });
+export const requestGetConfiguration =
+  (): FetchResponse<ConfigurationRequest> =>
+    fetch(`${envVars.appUrl}/api/configuration`, {
+      method: "GET",
+      // @ts-ignore
+      headers: getAuthHeaders(),
+    });
 
 export const requestSetConfiguration = (
-  data: ChannelConfigurationPayload
-): FetchResponse<ConfigurationResult> =>
+  data: ConfigurationRequest
+): FetchResponse<ConfigurationRequest> =>
   fetch(`${envVars.appUrl}/api/configuration`, {
     method: "POST",
     // @ts-ignore

@@ -9,13 +9,14 @@ import {
 } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
 import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
-import React from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ChannelItem } from "../../../types/common";
+import { ChannelItem } from "../../../../types/common";
 import AddressForm from "../../elements/AddressForm";
 import AppLayout from "../../elements/AppLayout";
 import AppSavebar from "../../elements/AppSavebar";
 import VerticalSpacer from "../../elements/VerticalSpacer";
+import { getFormDefaultValues } from "./data";
 
 interface ConfigurationDetailsProps {
   channels: ChannelItem[];
@@ -38,7 +39,18 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
   onSubmit,
   onChannelClick,
 }) => {
-  const { control, formState, handleSubmit: handleSubmitForm } = useForm();
+  const {
+    control,
+    formState,
+    handleSubmit: handleSubmitForm,
+    reset: resetForm,
+  } = useForm({
+    shouldUnregister: true,
+  });
+
+  useEffect(() => {
+    resetForm(getFormDefaultValues(configuration)); // Update values on subpage change as the same form is used
+  }, [configuration, resetForm]);
 
   const handleSubmit = (data: Record<string, any>) => {
     onSubmit({

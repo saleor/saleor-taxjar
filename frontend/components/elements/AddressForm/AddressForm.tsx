@@ -1,6 +1,6 @@
 import { TextField } from "@material-ui/core";
 import { Control, Controller, FieldValues } from "react-hook-form";
-import { Address } from "../../../types/common";
+import { Address } from "../../../../types/common";
 import { useStyles } from "./styles";
 
 interface AddressFormProps {

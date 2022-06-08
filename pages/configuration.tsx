@@ -4,12 +4,12 @@ import type { NextPage } from "next";
 import { useEffect, useState } from "react";
 import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 
-import useApp from "../hooks/useApp";
+import useApp from "../frontend/hooks/useApp";
 import { useChannelsQuery } from "../generated/graphql";
-import ConfigurationDetails from "../components/templates/ConfigurationDetails";
+import ConfigurationDetails from "../frontend/components/templates/ConfigurationDetails";
 import { ChannelItem } from "../types/common";
 import { ChannelConfigurationPayload } from "../types/api";
-import { useFetch } from "@/hooks/useFetch";
+import { useFetch } from "@/frontend/hooks/useFetch";
 import { requestGetConfiguration, requestSetConfiguration } from "@/fetch";
 
 export const menu: SidebarMenuItem[] = [
@@ -65,7 +65,12 @@ const Configuration: NextPage = () => {
       return;
     }
 
-    await setConfigurationFetch(data);
+    await setConfigurationFetch({
+      data: {
+        ...configurationData,
+        [currentChannel.id]: data,
+      },
+    });
 
     await getConfigurationFetch();
   };

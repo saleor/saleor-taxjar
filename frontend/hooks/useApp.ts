@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { AppContext } from "../providers/AppBridgeProvider";
+import { AppContext } from "../../providers/AppBridgeProvider";
 
 const useApp = () => {
   const { app } = useContext(AppContext);

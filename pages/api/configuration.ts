@@ -13,7 +13,7 @@ import {
   MetadataInput,
   ChannelsQuery,
   ChannelsDocument,
-  ChannelDataFragment
+  ChannelDataFragment,
 } from "../../generated/graphql";
 
 type ConfigurationField = {
@@ -42,7 +42,6 @@ type ConfigurationPayload = {
   [channelID in string]: ChannelConfigurationPayload;
 };
 
-
 const prepareMetadataFromRequest = (
   input: ConfigurationPayload
 ): MetadataInput[] => {
@@ -58,12 +57,12 @@ const prepareResponseFromMetadata = (
   channels?: ChannelDataFragment[]
 ): ConfigurationPayload => {
   let config: ConfigurationPayload = {};
-  if (!channels){
+  if (!channels) {
     return config;
   }
   for (const channel of channels) {
-    const item = input.find((item)=> item.key == channel.id)
-    const parsedConfiguration = item? JSON.parse(item.value): {}
+    const item = input.find((item) => item.key == channel.id);
+    const parsedConfiguration = item ? JSON.parse(item.value) : {};
     const shipFrom = parsedConfiguration.shipFrom;
     config[channel.id] = {
       active: parsedConfiguration.active || false,
@@ -71,10 +70,10 @@ const prepareResponseFromMetadata = (
       sandbox: parsedConfiguration.sandbox || true,
       shipFrom: {
         fromCity: shipFrom?.fromCity || "",
-        fromCountry: shipFrom?.fromCountry|| "",
-        fromState: shipFrom?.fromState|| "",
-        fromStreet: shipFrom?.fromStreet|| "",
-        fromZip: shipFrom?.fromZip|| "",
+        fromCountry: shipFrom?.fromCountry || "",
+        fromState: shipFrom?.fromState || "",
+        fromStreet: shipFrom?.fromStreet || "",
+        fromZip: shipFrom?.fromZip || "",
       },
     };
   }
@@ -96,9 +95,8 @@ const handler: NextApiHandler = async (request, response) => {
       .json({ success: false, message: error.message });
     return;
   }
-  const client = createClient(
-    `https://${saleorDomain}/graphql/`,
-    async () => Promise.resolve({ token: getAuthToken() })
+  const client = createClient(`https://${saleorDomain}/graphql/`, async () =>
+    Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;
@@ -136,7 +134,7 @@ const handler: NextApiHandler = async (request, response) => {
         await client
           .mutation<UpdateAppMetadataMutation>(UpdateAppMetadataDocument, {
             id: appId,
-            input: prepareMetadataFromRequest(request.body.data),
+            input: prepareMetadataFromRequest(JSON.parse(request.body).data),
           })
           .toPromise()
       ).data?.updatePrivateMetadata?.item?.privateMetadata!;
@@ -144,7 +142,7 @@ const handler: NextApiHandler = async (request, response) => {
       channels = (
         await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
       ).data?.channels;
-      
+
       if (privateMetadata && channels) {
         response.json({
           success: true,

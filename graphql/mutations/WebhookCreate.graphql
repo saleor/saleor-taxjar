@@ -1,0 +1,33 @@
+fragment WebhookData on Webhook {
+  id
+}
+
+mutation WebhookCreate(
+  $asyncEvents: [WebhookEventTypeAsyncEnum!]
+  $syncEvents: [WebhookEventTypeSyncEnum!]
+  $targetUrl: String
+  $name: String
+  $query: String
+  $secretKey: String
+) {
+  webhookCreate(
+    input: {
+      isActive: true
+      asyncEvents: $asyncEvents
+      syncEvents: $syncEvents
+      targetUrl: $targetUrl
+      name: $name
+      query: $query
+      secretKey: $secretKey
+    }
+  ) {
+    webhook {
+      ...WebhookData
+    }
+    errors {
+      code
+      message
+      field
+    }
+  }
+}

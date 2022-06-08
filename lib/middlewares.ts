@@ -1,9 +1,11 @@
 import { NextApiRequest } from "next";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import jwks , { CertSigningKey, RsaSigningKey } from "jwks-rsa";
-
+import {createHmac} from "crypto";
 import * as Constants from "../constants";
 import MiddlewareError from "../utils/MiddlewareError";
+import { request } from "http";
+import { type } from "os";
 
 export const getBaseURL = (req: NextApiRequest): string => {
   const { host, "x-forwarded-proto": protocol = "http" } = req.headers;
@@ -28,19 +30,36 @@ export const eventMiddleware = (
     throw new MiddlewareError("Invalid event.", 400);
   }
 };
+
 export const requestType = (request: NextApiRequest) => {
   if (request.method !== "POST") {
     throw new MiddlewareError("Only POST requests allowed", 405)
   }
 }
 
+export const eventSignatureMiddleware = (request: NextApiRequest, secretKey: string, payloadBuffer: Buffer | string) => {
+  const hmac = createHmac('sha256', "ABC");
+  
+  hmac.update(payloadBuffer);
+  //FIXME:
+  console.log("created hmac");
+  console.log(hmac.digest('hex'));
+}
+
 export const webhookMiddleware = (
   request: NextApiRequest,
-  expectedEvent: string
+  expectedEvent: string,
+  payloadBuffer: Buffer | string
+  
 ) => {
   requestType(request);
   domainMiddleware(request);
   eventMiddleware(request, expectedEvent);
+  //FIXME:
+  console.log("saleor-signature")
+  console.log(request.headers["saleor-signature"])
+  eventSignatureMiddleware(request, "ABC", payloadBuffer);
+
 };
 
 export const jwtVerifyMiddleware = async (request: NextApiRequest) => {

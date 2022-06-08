@@ -5,7 +5,8 @@ import path from 'path';
 
 import { version, name } from "../../package.json";
 import * as GeneratedGraphQL from "../../generated/graphql";
-import { getBaseURL } from "../../lib/middlewares";
+import {PermissionEnum} from "../../generated/graphql"
+import { eventSignatureMiddleware, getBaseURL } from "../../lib/middlewares";
 
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 const dropFileExtension = (filename: string) => path.parse(filename).name;
@@ -31,25 +32,15 @@ const handler: NextApiHandler = async (request, response) => {
   const baseURL = getBaseURL(request);
 
   const webhooks = await inferWebhooks(baseURL);
-
+  eventSignatureMiddleware(request, "abc");
   const manifest = {
-    id: "saleor.app",
+    id: "saleor.app.taxjar",
     version: version,
     name: name,
-    permissions: ["MANAGE_ORDERS"],
+    permissions: [PermissionEnum.ManageOrders, PermissionEnum.HandleTaxes],
     appUrl: baseURL,
     configurationUrl: `${baseURL}/configuration`,
     tokenTargetUrl: `${baseURL}/api/register`,
-    webhooks,
-    extensions: [
-      {
-        label: "Orders in an app",
-        mount: "NAVIGATION_ORDERS",
-        target: "APP_PAGE",
-        permissions: ["MANAGE_ORDERS"],
-        url: "/orders",
-      },
-    ],
   };
 
   response.json(manifest);

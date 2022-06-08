@@ -1,4 +1,4 @@
-schema: https://vercel.saleor.cloud/graphql/
+schema: http://127.0.0.1:8000/graphql/
 documents: graphql/**/*.graphql
 extensions:
   codegen:

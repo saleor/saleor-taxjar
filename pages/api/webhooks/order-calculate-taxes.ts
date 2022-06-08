@@ -1,3 +1,4 @@
+import { buffer } from "micro";
 import { NextApiHandler } from "next";
 import { calculateOrderTaxes } from "../../../backend/taxHandlers";
 import { OrderPayload, TaxJarConfig } from "../../../backend/types";
@@ -8,11 +9,19 @@ import MiddlewareError from "../../../utils/MiddlewareError";
 
 const expectedEvent = "order_calculate_taxes";
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 const handler: NextApiHandler = async (request, response) => {
   // FIXME: the validation of webhook should take into account webhook.secretKey,
   // the domain should also be validated
   try {
-    webhookMiddleware(request, expectedEvent);
+    // FIXME: make sure that signature is correct
+    const payloadBuffer = await buffer(request);
+    webhookMiddleware(request, expectedEvent, payloadBuffer);
   } catch (e: unknown) {
     const error = e as MiddlewareError;
     console.log(error);

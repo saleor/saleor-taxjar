@@ -9,7 +9,7 @@ const GraphQLProvider: React.FC<PropsWithChildren<{}>> = (props) => {
   const domain = app?.getState().domain!;
 
   const client = createClient(
-    `https://${domain}/graphql/`,
+    `http://${domain}/graphql/`,
     async () => Promise.resolve({ token: app?.getState().token! }),
   );
 

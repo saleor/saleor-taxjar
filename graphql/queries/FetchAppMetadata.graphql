@@ -1,9 +1,0 @@
-query FetchAppMetadata {
-  app {
-    id
-    privateMetadata {
-      key
-      value
-    }
-  }
-}

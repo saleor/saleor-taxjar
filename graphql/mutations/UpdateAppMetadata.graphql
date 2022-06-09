@@ -1,10 +1,20 @@
-mutation UpdateAppMetadata($id: ID!, $input: [MetadataInput!]!) {
+fragment MetadataErrorFragment on MetadataError {
+  code
+  message
+  field
+}
+
+mutation UpdateAppMetadata(
+  $id: ID!
+  $input: [MetadataInput!]!
+  $keys: [String!]
+) {
   updatePrivateMetadata(id: $id, input: $input) {
     item {
-      privateMetadata {
-        key
-        value
-      }
+      privateMetafields(keys: $keys)
+    }
+    errors {
+      ...MetadataErrorFragment
     }
   }
 }

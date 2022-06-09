@@ -5,8 +5,6 @@ import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
 import MiddlewareError from "../../utils/MiddlewareError";
 import { getAuthToken } from "../../lib/environment";
 import {
-  FetchAppMetadataDocument,
-  FetchAppMetadataQuery,
   UpdateAppMetadataDocument,
   UpdateAppMetadataMutation,
   MetadataItem,
@@ -14,6 +12,10 @@ import {
   ChannelsQuery,
   ChannelsDocument,
   ChannelDataFragment,
+  FetchAppMetafieldsQuery,
+  FetchAppMetafieldsDocument,
+  FetchAppMetafieldsQueryVariables,
+  UpdateAppMetadataMutationVariables,
 } from "../../generated/graphql";
 
 type ConfigurationField = {
@@ -42,6 +44,10 @@ type ConfigurationPayload = {
   [channelID in string]: ChannelConfigurationPayload;
 };
 
+type ConfigurationMetadata = {
+  [channelID in string]: string;
+};
+
 const prepareMetadataFromRequest = (
   input: ConfigurationPayload
 ): MetadataInput[] => {
@@ -53,18 +59,18 @@ const prepareMetadataFromRequest = (
 };
 
 const prepareResponseFromMetadata = (
-  input: MetadataItem[],
-  channels?: ChannelDataFragment[]
+  input: ConfigurationMetadata,
+  channelsIds: string[]
 ): ConfigurationPayload => {
   let config: ConfigurationPayload = {};
-  if (!channels) {
+  if (!channelsIds) {
     return config;
   }
-  for (const channel of channels) {
-    const item = input.find((item) => item.key == channel.id);
-    const parsedConfiguration = item ? JSON.parse(item.value) : {};
+  for (const channelId of channelsIds) {
+    const item = input[channelId];
+    const parsedConfiguration = item ? JSON.parse(item) : {};
     const shipFrom = parsedConfiguration.shipFrom;
-    config[channel.id] = {
+    config[channelId] = {
       active: parsedConfiguration.active || false,
       apiKey: parsedConfiguration.apiKey || "",
       sandbox: parsedConfiguration.sandbox || true,
@@ -90,9 +96,10 @@ const handler: NextApiHandler = async (request, response) => {
     const error = e as MiddlewareError;
 
     console.error(error);
-    response
-      .status(error.statusCode)
-      .json({ success: false, message: error.message });
+    response.status(error.statusCode).json({
+      success: false,
+      error,
+    });
     return;
   }
   const client = createClient(`https://${saleorDomain}/graphql/`, async () =>
@@ -100,18 +107,30 @@ const handler: NextApiHandler = async (request, response) => {
   );
 
   let privateMetadata;
-  let channels;
+  const channelQuery = request.query.channel;
+  const channels =
+    typeof channelQuery === "string" ? [channelQuery] : channelQuery;
   switch (request.method!) {
     case "GET":
+      if (!channels?.length) {
+        response.json({
+          success: false,
+          error: { message: "Query param 'channel' is required" },
+        });
+        return;
+      }
       privateMetadata = (
         await client
-          .query<FetchAppMetadataQuery>(FetchAppMetadataDocument)
+          .query<FetchAppMetafieldsQuery, FetchAppMetafieldsQueryVariables>(
+            FetchAppMetafieldsDocument,
+            {
+              keys: channels,
+            }
+          )
           .toPromise()
-      ).data?.app?.privateMetadata;
-      channels = (
-        await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
-      ).data?.channels;
-      if (privateMetadata && channels) {
+      ).data?.app?.privateMetafields;
+      console.log("privateMetadata", privateMetadata);
+      if (privateMetadata) {
         response.json({
           success: true,
           data: prepareResponseFromMetadata(privateMetadata, channels),
@@ -119,31 +138,47 @@ const handler: NextApiHandler = async (request, response) => {
       } else {
         response.json({
           success: false,
-          message: "Unable to fetch app configuration.",
+          error: { message: "Unable to fetch app configuration." },
         });
       }
       break;
     case "POST":
+      if (!channels?.length) {
+        response.json({
+          success: false,
+          error: { message: "Query param 'channel' is required" },
+        });
+        return;
+      }
+
       const appId = (
         await client
-          .query<FetchAppMetadataQuery>(FetchAppMetadataDocument)
+          .query<FetchAppMetafieldsQuery>(FetchAppMetafieldsDocument)
           .toPromise()
       ).data?.app?.id;
 
+      if (!appId) {
+        response.json({
+          success: false,
+          error: { message: "Unable to fetch app id." },
+        });
+        return;
+      }
+
       privateMetadata = (
         await client
-          .mutation<UpdateAppMetadataMutation>(UpdateAppMetadataDocument, {
+          .mutation<
+            UpdateAppMetadataMutation,
+            UpdateAppMetadataMutationVariables
+          >(UpdateAppMetadataDocument, {
             id: appId,
             input: prepareMetadataFromRequest(JSON.parse(request.body).data),
+            keys: channels,
           })
           .toPromise()
-      ).data?.updatePrivateMetadata?.item?.privateMetadata!;
+      ).data?.updatePrivateMetadata?.item?.privateMetafields!;
 
-      channels = (
-        await client.query<ChannelsQuery>(ChannelsDocument).toPromise()
-      ).data?.channels;
-
-      if (privateMetadata && channels) {
+      if (privateMetadata) {
         response.json({
           success: true,
           data: prepareResponseFromMetadata(privateMetadata, channels),
@@ -151,14 +186,15 @@ const handler: NextApiHandler = async (request, response) => {
       } else {
         response.json({
           success: false,
-          message: "Unable to fetch app configuration.",
+          error: { message: "Unable to fetch app configuration." },
         });
       }
       break;
     default:
-      response
-        .status(405)
-        .json({ success: false, message: "Method not allowed." });
+      response.status(405).json({
+        success: false,
+        error: { message: "Method not allowed." },
+      });
   }
 };
 

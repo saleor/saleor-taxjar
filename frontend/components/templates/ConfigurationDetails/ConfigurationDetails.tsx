@@ -11,19 +11,27 @@ import { Skeleton } from "@material-ui/lab";
 import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { CombinedError } from "urql";
 import { ChannelItem } from "../../../../types/common";
 import AddressForm from "../../elements/AddressForm";
 import AppLayout from "../../elements/AppLayout";
 import AppSavebar from "../../elements/AppSavebar";
+import ErrorAlert from "../../elements/ErrorAlert";
 import VerticalSpacer from "../../elements/VerticalSpacer";
 import { getFormDefaultValues } from "./data";
+
+export interface LoadingState {
+  sidebar: boolean;
+  configuration: boolean;
+}
 
 interface ConfigurationDetailsProps {
   channels: ChannelItem[];
   currentChannel?: ChannelItem;
   configuration?: ChannelConfigurationPayload;
   saveButtonBarState: ConfirmButtonTransitionState;
-  loading: boolean;
+  loading: LoadingState;
+  errors?: Partial<CombinedError>[];
   onChannelClick: (channel: ChannelItem) => void;
   onCancel: () => void;
   onSubmit: (data: ChannelConfigurationPayload) => void;
@@ -35,6 +43,7 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
   configuration,
   saveButtonBarState,
   loading,
+  errors,
   onCancel,
   onSubmit,
   onChannelClick,
@@ -73,14 +82,18 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
         title={"test"}
         items={channels}
         selectedItem={currentChannel}
-        loading={loading}
+        loading={loading.sidebar}
         onBackClick={undefined}
         onSettingsClick={undefined}
         onItemClick={onChannelClick}
       >
+        <ErrorAlert
+          errors={errors}
+          getErrorMessage={(error) => error.message}
+        />
         <Card>
           <CardContent>
-            {loading ? (
+            {loading.configuration ? (
               <Skeleton />
             ) : (
               <>
@@ -158,7 +171,9 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
         </Card>
       </AppLayout>
       <AppSavebar
-        disabled={loading || !formState.isDirty}
+        disabled={
+          loading.sidebar || loading.configuration || !formState.isDirty
+        }
         state={saveButtonBarState}
         onCancel={onCancel}
         onSubmit={handleSubmitForm(handleSubmit)}

@@ -6,11 +6,15 @@ import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 
 import useApp from "../frontend/hooks/useApp";
 import { useChannelsQuery } from "../generated/graphql";
-import ConfigurationDetails from "../frontend/components/templates/ConfigurationDetails";
+import ConfigurationDetails, {
+  LoadingState,
+} from "../frontend/components/templates/ConfigurationDetails";
 import { ChannelItem } from "../types/common";
 import { ChannelConfigurationPayload } from "../types/api";
 import { useFetch } from "@/frontend/hooks/useFetch";
 import { requestGetConfiguration, requestSetConfiguration } from "@/fetch";
+import { getCommonErrors } from "@/frontend/utils";
+import { CombinedError } from "urql";
 
 export const menu: SidebarMenuItem[] = [
   {
@@ -44,13 +48,22 @@ const Configuration: NextPage = () => {
   }, [channelItems.length]);
 
   const [getConfiguration, getConfigurationFetch] = useFetch(
-    requestGetConfiguration,
+    () =>
+      requestGetConfiguration({
+        channelId: currentChannel?.id || "",
+      }),
     {
-      skip: !appState?.ready,
+      skip: !appState?.ready || !currentChannel?.id,
     }
   );
   const [setConfiguration, setConfigurationFetch] = useFetch(
-    requestSetConfiguration,
+    (data) =>
+      requestSetConfiguration(
+        {
+          channelId: currentChannel?.id || "",
+        },
+        data
+      ),
     {
       skip: true,
     }
@@ -59,6 +72,12 @@ const Configuration: NextPage = () => {
   const configurationData = getConfiguration.data?.data;
   const configuration =
     configurationData && currentChannel && configurationData[currentChannel.id];
+
+  useEffect(() => {
+    if (currentChannel?.id) {
+      getConfigurationFetch();
+    }
+  }, [currentChannel]);
 
   const handleSubmit = async (data: ChannelConfigurationPayload) => {
     if (!currentChannel) {
@@ -75,19 +94,26 @@ const Configuration: NextPage = () => {
     await getConfigurationFetch();
   };
 
-  console.log(configuration);
-
-  const loading =
-    !appState?.ready ||
-    getConfiguration.loading ||
-    setConfiguration.loading ||
-    !configuration;
-  const error = getConfiguration.error || setConfiguration.error;
-  const transitionState: ConfirmButtonTransitionState = loading
-    ? "loading"
-    : error
-    ? "error"
-    : "default";
+  const loading: LoadingState = {
+    sidebar: !appState?.ready || channelsQuery.fetching,
+    configuration:
+      !appState?.ready ||
+      channelsQuery.fetching ||
+      getConfiguration.loading ||
+      setConfiguration.loading ||
+      !configuration,
+  };
+  const errors = [
+    ...getCommonErrors(channelsQuery.error),
+    ...getCommonErrors(getConfiguration.error as Partial<CombinedError>),
+    ...getCommonErrors(setConfiguration.error as Partial<CombinedError>),
+  ];
+  const transitionState: ConfirmButtonTransitionState =
+    loading.sidebar || loading.configuration
+      ? "loading"
+      : !!errors.length
+      ? "error"
+      : "default";
 
   return (
     <ConfigurationDetails
@@ -96,6 +122,7 @@ const Configuration: NextPage = () => {
       currentChannel={currentChannel}
       onChannelClick={setCurrentChannel}
       loading={loading}
+      errors={errors}
       saveButtonBarState={transitionState}
       onCancel={() => undefined}
       onSubmit={handleSubmit}

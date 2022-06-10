@@ -7,84 +7,15 @@ import { getAuthToken } from "../../lib/environment";
 import {
   UpdateAppMetadataDocument,
   UpdateAppMetadataMutation,
-  MetadataItem,
-  MetadataInput,
-  ChannelsQuery,
-  ChannelsDocument,
-  ChannelDataFragment,
   FetchAppMetafieldsQuery,
   FetchAppMetafieldsDocument,
   FetchAppMetafieldsQueryVariables,
   UpdateAppMetadataMutationVariables,
 } from "../../generated/graphql";
-
-type ConfigurationField = {
-  key: string;
-  value: string | boolean;
-  label: string;
-  type: "TEXT" | "BOOLEAN";
-};
-
-type ConfigurationPayloadShipFrom = {
-  fromCountry: string;
-  fromZip: string;
-  fromCity: string;
-  fromStreet: string;
-  fromState: string;
-};
-
-type ChannelConfigurationPayload = {
-  apiKey: string;
-  active: boolean;
-  sandbox: boolean;
-  shipFrom: ConfigurationPayloadShipFrom;
-};
-
-type ConfigurationPayload = {
-  [channelID in string]: ChannelConfigurationPayload;
-};
-
-type ConfigurationMetadata = {
-  [channelID in string]: string;
-};
-
-const prepareMetadataFromRequest = (
-  input: ConfigurationPayload
-): MetadataInput[] => {
-  let response: MetadataInput[] = [];
-  Object.entries(input).forEach(([channelID, settings]) => {
-    response.push({ key: channelID, value: JSON.stringify(settings) });
-  });
-  return response;
-};
-
-const prepareResponseFromMetadata = (
-  input: ConfigurationMetadata,
-  channelsIds: string[]
-): ConfigurationPayload => {
-  let config: ConfigurationPayload = {};
-  if (!channelsIds) {
-    return config;
-  }
-  for (const channelId of channelsIds) {
-    const item = input[channelId];
-    const parsedConfiguration = item ? JSON.parse(item) : {};
-    const shipFrom = parsedConfiguration.shipFrom;
-    config[channelId] = {
-      active: parsedConfiguration.active || false,
-      apiKey: parsedConfiguration.apiKey || "",
-      sandbox: parsedConfiguration.sandbox || true,
-      shipFrom: {
-        fromCity: shipFrom?.fromCity || "",
-        fromCountry: shipFrom?.fromCountry || "",
-        fromState: shipFrom?.fromState || "",
-        fromStreet: shipFrom?.fromStreet || "",
-        fromZip: shipFrom?.fromZip || "",
-      },
-    };
-  }
-  return config;
-};
+import {
+  prepareMetadataFromRequest,
+  prepareResponseFromMetadata,
+} from "@/backend/configuration";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;
@@ -133,7 +64,7 @@ const handler: NextApiHandler = async (request, response) => {
       if (privateMetadata) {
         response.json({
           success: true,
-          data: prepareResponseFromMetadata(privateMetadata, channels),
+          data: prepareResponseFromMetadata(privateMetadata, channels, true),
         });
       } else {
         response.json({
@@ -181,7 +112,7 @@ const handler: NextApiHandler = async (request, response) => {
       if (privateMetadata) {
         response.json({
           success: true,
-          data: prepareResponseFromMetadata(privateMetadata, channels),
+          data: prepareResponseFromMetadata(privateMetadata, channels, true),
         });
       } else {
         response.json({

@@ -66,13 +66,11 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
       apiKey: data["apiKey"],
       active: data["active"],
       sandbox: data["sandbox"],
-      shipFrom: {
-        fromCountry: data["country"],
-        fromZip: data["zip"],
-        fromCity: data["city"],
-        fromStreet: data["street"],
-        fromState: data["state"],
-      },
+      shipFromCountry: data["country"],
+      shipFromZip: data["zip"],
+      shipFromCity: data["city"],
+      shipFromStreet: data["street"],
+      shipFromState: data["state"],
     });
   };
 
@@ -157,11 +155,11 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
                 <VerticalSpacer />
                 <AddressForm
                   address={{
-                    country: configuration?.shipFrom.fromCountry || "",
-                    zip: configuration?.shipFrom.fromZip || "",
-                    city: configuration?.shipFrom.fromCity || "",
-                    street: configuration?.shipFrom.fromStreet || "",
-                    state: configuration?.shipFrom.fromState || "",
+                    country: configuration?.shipFromCountry || "",
+                    zip: configuration?.shipFromZip || "",
+                    city: configuration?.shipFromCity || "",
+                    street: configuration?.shipFromStreet || "",
+                    state: configuration?.shipFromState || "",
                   }}
                   formControl={control}
                 />

@@ -4,9 +4,9 @@ export const getFormDefaultValues = (
   configuration: ChannelConfigurationPayload | undefined
 ) => ({
   ...configuration,
-  street: configuration?.shipFrom.fromStreet,
-  city: configuration?.shipFrom.fromCity,
-  state: configuration?.shipFrom.fromState,
-  zip: configuration?.shipFrom.fromZip,
-  country: configuration?.shipFrom.fromCountry,
+  street: configuration?.shipFromStreet,
+  city: configuration?.shipFromCity,
+  state: configuration?.shipFromState,
+  zip: configuration?.shipFromZip,
+  country: configuration?.shipFromCountry,
 });

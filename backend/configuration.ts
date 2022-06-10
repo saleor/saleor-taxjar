@@ -16,27 +16,29 @@ export const prepareResponseFromMetadata = (
   channelsIds: string[],
   obfuscateEncryptedData: boolean
 ): ConfigurationPayload => {
-  let config: ConfigurationPayload = {};
   if (!channelsIds) {
-    return config;
+    return {};
   }
-  for (const channelId of channelsIds) {
+
+  return channelsIds.reduce((config, channelId) => {
     const item = input[channelId];
     const parsedConfiguration = item ? JSON.parse(item) : {};
     const decryptedConfiguration = decryptConfiguration(
       parsedConfiguration,
       obfuscateEncryptedData
     );
-    config[channelId] = {
-      active: decryptedConfiguration.active || false,
-      apiKey: decryptedConfiguration.apiKey || "",
-      sandbox: decryptedConfiguration.sandbox || true,
-      shipFromCity: decryptedConfiguration.shipFromCity || "",
-      shipFromCountry: decryptedConfiguration.shipFromCountry || "",
-      shipFromState: decryptedConfiguration.shipFromState || "",
-      shipFromStreet: decryptedConfiguration.shipFromStreet || "",
-      shipFromZip: decryptedConfiguration.shipFromZip || "",
+    return {
+      ...config,
+      [channelId]: {
+        active: decryptedConfiguration.active || false,
+        apiKey: decryptedConfiguration.apiKey || "",
+        sandbox: decryptedConfiguration.sandbox || true,
+        shipFromCity: decryptedConfiguration.shipFromCity || "",
+        shipFromCountry: decryptedConfiguration.shipFromCountry || "",
+        shipFromState: decryptedConfiguration.shipFromState || "",
+        shipFromStreet: decryptedConfiguration.shipFromStreet || "",
+        shipFromZip: decryptedConfiguration.shipFromZip || "",
+      },
     };
-  }
-  return config;
+  }, {} as ConfigurationPayload);
 };

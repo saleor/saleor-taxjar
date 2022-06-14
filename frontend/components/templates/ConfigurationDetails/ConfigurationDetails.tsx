@@ -12,13 +12,16 @@ import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { CombinedError } from "urql";
-import { ChannelItem } from "../../../../types/common";
+import {
+  ChannelConfigurationForm,
+  ChannelItem,
+} from "../../../../types/common";
 import AddressForm from "../../elements/AddressForm";
 import AppLayout from "../../elements/AppLayout";
 import AppSavebar from "../../elements/AppSavebar";
 import ErrorAlert from "../../elements/ErrorAlert";
 import VerticalSpacer from "../../elements/VerticalSpacer";
-import { getFormDefaultValues } from "./data";
+import { getFormDefaultAddress, getFormDefaultValues } from "./data";
 
 export interface LoadingState {
   sidebar: boolean;
@@ -53,24 +56,26 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
     formState,
     handleSubmit: handleSubmitForm,
     reset: resetForm,
-  } = useForm({
+  } = useForm<ChannelConfigurationForm>({
     shouldUnregister: true,
   });
 
   useEffect(() => {
-    resetForm(getFormDefaultValues(configuration)); // Update values on subpage change as the same form is used
-  }, [configuration, resetForm]);
+    if (!loading) {
+      resetForm(getFormDefaultValues(configuration)); // Update values on subpage change as the same form is used
+    }
+  }, [configuration, loading, resetForm]);
 
-  const handleSubmit = (data: Record<string, any>) => {
+  const handleSubmit = (data: ChannelConfigurationForm) => {
     onSubmit({
-      apiKey: data["apiKey"],
-      active: data["active"],
-      sandbox: data["sandbox"],
-      shipFromCountry: data["country"],
-      shipFromZip: data["zip"],
-      shipFromCity: data["city"],
-      shipFromStreet: data["street"],
-      shipFromState: data["state"],
+      apiKey: data.apiKey,
+      active: data.active,
+      sandbox: data.sandbox,
+      shipFromCountry: data.country,
+      shipFromZip: data.zip,
+      shipFromCity: data.city,
+      shipFromStreet: data.street,
+      shipFromState: data.state,
     });
   };
 
@@ -154,13 +159,7 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
                 <Typography variant="body2">Ship From</Typography>
                 <VerticalSpacer />
                 <AddressForm
-                  address={{
-                    country: configuration?.shipFromCountry || "",
-                    zip: configuration?.shipFromZip || "",
-                    city: configuration?.shipFromCity || "",
-                    street: configuration?.shipFromStreet || "",
-                    state: configuration?.shipFromState || "",
-                  }}
+                  address={getFormDefaultAddress(configuration)}
                   formControl={control}
                 />
               </>

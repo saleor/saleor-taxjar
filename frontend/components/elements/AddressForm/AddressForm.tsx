@@ -1,11 +1,12 @@
 import { TextField } from "@material-ui/core";
-import { Control, Controller, FieldValues } from "react-hook-form";
-import { Address } from "../../../../types/common";
+import { Control, Controller } from "react-hook-form";
+import { Address, ChannelConfigurationForm } from "../../../../types/common";
+import CountrySelect from "../CountrySelect/CountrySelect";
 import { useStyles } from "./styles";
 
 interface AddressFormProps {
   address: Address;
-  formControl?: Control<FieldValues, any>;
+  formControl?: Control<ChannelConfigurationForm, any>;
 }
 
 const AddressForm: React.FC<AddressFormProps> = ({ address, formControl }) => {
@@ -18,7 +19,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ address, formControl }) => {
         control={formControl}
         defaultValue={address.country}
         render={({ field }) => (
-          <TextField
+          <CountrySelect
             className={classes.country}
             label="Country"
             name={field.name}

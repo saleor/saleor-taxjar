@@ -1,3 +1,5 @@
+import { ChannelConfigurationBase } from "./api";
+
 export interface Item {
   id: string;
   label: string;
@@ -15,3 +17,5 @@ export interface Address {
   zip: string;
   country: string;
 }
+
+export type ChannelConfigurationForm = ChannelConfigurationBase & Address;

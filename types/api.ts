@@ -6,11 +6,14 @@ export type ConfigurationPayloadShipFrom = {
   shipFromState: string;
 };
 
-export type ChannelConfigurationPayload = {
+export interface ChannelConfigurationBase {
   apiKey: string;
   active: boolean;
   sandbox: boolean;
-} & ConfigurationPayloadShipFrom;
+}
+
+export type ChannelConfigurationPayload = ChannelConfigurationBase &
+  ConfigurationPayloadShipFrom;
 
 export type MetedataField<T> = {
   encrypted: boolean;

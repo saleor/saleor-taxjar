@@ -66,16 +66,21 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
     }
   }, [configuration, loading, resetForm]);
 
-  const handleSubmit = (data: ChannelConfigurationForm) => {
+  const handleSubmit = ({
+    country,
+    zip,
+    city,
+    street,
+    state,
+    ...rest
+  }: ChannelConfigurationForm) => {
     onSubmit({
-      apiKey: data.apiKey,
-      active: data.active,
-      sandbox: data.sandbox,
-      shipFromCountry: data.country,
-      shipFromZip: data.zip,
-      shipFromCity: data.city,
-      shipFromStreet: data.street,
-      shipFromState: data.state,
+      shipFromCountry: country,
+      shipFromZip: zip,
+      shipFromCity: city,
+      shipFromStreet: street,
+      shipFromState: state,
+      ...rest,
     });
   };
 

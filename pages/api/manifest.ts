@@ -38,12 +38,14 @@ const handler: NextApiHandler = async (request, response) => {
   const webhooks = await inferWebhooks(baseURL);
 
   const manifest = {
-    id: "saleor.app",
+    id: "saleor.taxjar.app",
     version: version,
     name: appName,
+    about: "Saleor TaxJar app to provide sales tax compliance for your store.",
     permissions: ["MANAGE_ORDERS"],
     appUrl: baseURL,
-    configurationUrl: `${baseURL}/configuration`,
+    dataPrivacyUrl: `${baseURL}/data-privacy`,
+    supportUrl: `${baseURL}/support`,
     tokenTargetUrl: `${baseURL}/api/register`,
     webhooks,
     extensions: [

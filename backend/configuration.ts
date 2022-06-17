@@ -23,21 +23,27 @@ export const prepareResponseFromMetadata = (
   return channelsIds.reduce((config, channelId) => {
     const item = input[channelId];
     const parsedConfiguration = item ? JSON.parse(item) : {};
-    const decryptedConfiguration = decryptConfiguration(
-      parsedConfiguration,
-      obfuscateEncryptedData
-    );
+    const {
+      active,
+      apiKey,
+      sandbox,
+      shipFromCity,
+      shipFromCountry,
+      shipFromState,
+      shipFromStreet,
+      shipFromZip,
+    } = decryptConfiguration(parsedConfiguration, obfuscateEncryptedData);
     return {
       ...config,
       [channelId]: {
-        active: decryptedConfiguration.active || false,
-        apiKey: decryptedConfiguration.apiKey || "",
-        sandbox: decryptedConfiguration.sandbox || true,
-        shipFromCity: decryptedConfiguration.shipFromCity || "",
-        shipFromCountry: decryptedConfiguration.shipFromCountry || "",
-        shipFromState: decryptedConfiguration.shipFromState || "",
-        shipFromStreet: decryptedConfiguration.shipFromStreet || "",
-        shipFromZip: decryptedConfiguration.shipFromZip || "",
+        active: active || false,
+        apiKey: apiKey || "",
+        sandbox: sandbox || true,
+        shipFromCity: shipFromCity || "",
+        shipFromCountry: shipFromCountry || "",
+        shipFromState: shipFromState || "",
+        shipFromStreet: shipFromStreet || "",
+        shipFromZip: shipFromZip || "",
       },
     };
   }, {} as ConfigurationPayload);

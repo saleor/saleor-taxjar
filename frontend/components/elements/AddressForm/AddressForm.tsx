@@ -4,6 +4,40 @@ import { Address, ChannelConfigurationForm } from "../../../../types/common";
 import CountrySelect from "../CountrySelect/CountrySelect";
 import { useStyles } from "./styles";
 
+interface AddressField {
+  key: keyof Address;
+  label: string;
+  component: typeof CountrySelect | typeof TextField;
+}
+
+const addressFields: AddressField[] = [
+  {
+    key: "country",
+    label: "Country",
+    component: CountrySelect,
+  },
+  {
+    key: "zip",
+    label: "Zip",
+    component: TextField,
+  },
+  {
+    key: "city",
+    label: "City",
+    component: TextField,
+  },
+  {
+    key: "street",
+    label: "Street",
+    component: TextField,
+  },
+  {
+    key: "state",
+    label: "State",
+    component: TextField,
+  },
+];
+
 interface AddressFormProps {
   address: Address;
   formControl?: Control<ChannelConfigurationForm, any>;
@@ -14,81 +48,24 @@ const AddressForm: React.FC<AddressFormProps> = ({ address, formControl }) => {
 
   return (
     <div className={classes.root}>
-      <Controller
-        name="country"
-        control={formControl}
-        defaultValue={address.country}
-        render={({ field }) => (
-          <CountrySelect
-            className={classes.country}
-            label="Country"
-            name={field.name}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-        )}
-      />
-      <Controller
-        name="zip"
-        control={formControl}
-        defaultValue={address.zip}
-        render={({ field }) => (
-          <TextField
-            className={classes.zip}
-            label="Zip"
-            name={field.name}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-        )}
-      />
-      <Controller
-        name="city"
-        control={formControl}
-        defaultValue={address.city}
-        render={({ field }) => (
-          <TextField
-            className={classes.city}
-            label="City"
-            name={field.name}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-        )}
-      />
-      <Controller
-        name="street"
-        control={formControl}
-        defaultValue={address.street}
-        render={({ field }) => (
-          <TextField
-            className={classes.street}
-            label="Street"
-            name={field.name}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-        )}
-      />
-      <Controller
-        name="state"
-        control={formControl}
-        defaultValue={address.state}
-        render={({ field }) => (
-          <TextField
-            className={classes.state}
-            label="State"
-            name={field.name}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-          />
-        )}
-      />
+      {addressFields.map((addressField) => (
+        <Controller
+          key={addressField.key}
+          name={addressField.key}
+          control={formControl}
+          defaultValue={address[addressField.key]}
+          render={({ field }) => (
+            <addressField.component
+              style={{ gridArea: addressField.key }}
+              label={addressField.label}
+              name={field.name}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+            />
+          )}
+        />
+      ))}
     </div>
   );
 };

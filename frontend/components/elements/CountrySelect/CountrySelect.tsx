@@ -6,7 +6,7 @@ import { getCountryCodeFromName, getCountryFromCode } from "./utils";
 import { useStyles } from "./styles";
 
 interface CountrySelectProps {
-  className?: string;
+  style?: React.CSSProperties;
   name: string;
   label: string;
   value: string;
@@ -15,7 +15,7 @@ interface CountrySelectProps {
 }
 
 const CountrySelect: React.FC<CountrySelectProps> = ({
-  className,
+  style,
   label,
   name,
   value,
@@ -26,7 +26,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
 
   return (
     <Autocomplete
-      className={className}
+      style={style}
       options={countries}
       value={getCountryFromCode(value)}
       onSelect={(event) => {

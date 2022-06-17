@@ -12,21 +12,6 @@ export const useStyles = makeStyles(
       gridTemplateColumns: `1fr 1fr 1fr 1fr`,
       gap: theme.spacing(2),
     },
-    country: {
-      gridArea: "country",
-    },
-    zip: {
-      gridArea: "zip",
-    },
-    city: {
-      gridArea: "city",
-    },
-    street: {
-      gridArea: "street",
-    },
-    state: {
-      gridArea: "state",
-    },
   }),
   {
     name: "AddressForm",

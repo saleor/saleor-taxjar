@@ -18,7 +18,7 @@ const getDiscountForLine = (
   totalDiscount: number,
   allLinesTotal: number
 ) => {
-  if (totalDiscount === 0 || allLinesTotal == 0) {
+  if (totalDiscount === 0 || allLinesTotal === 0) {
     return 0;
   }
   const lineTotalAmount = Number(line.total_amount);
@@ -34,11 +34,11 @@ const prepareLinesPayload = (
   discounts: Array<DiscountPayload>
 ): Array<FetchTaxesLinePayload> => {
   const allLinesTotal = lines.reduce(
-    (total, current) => total + +current.total_amount,
+    (total, current) => total + Number(current.total_amount),
     0
   );
   const discountsSum = discounts?.reduce(
-    (total, current) => total + +current.amount,
+    (total, current) => total + Number(current.amount),
     0
   ) || 0;
 
@@ -71,7 +71,7 @@ const calculateTaxes = async (
   taxJarConfig: TaxJarConfig
 ): Promise<{ data: ResponseTaxPayload }> => {
   const taxResposne = await fetchTaxes(taxData, taxJarConfig);
-
+  
   const taxDetails = taxResposne.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
 
@@ -144,7 +144,7 @@ export const calculateOrderTaxes = async (
   return await calculateTaxes(taxData, taxJarConfig);
 };
 
-export const createTaxJarOrder = (
+export const createTaxJarOrder = async (
   order: OrderSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ) => {
@@ -153,6 +153,7 @@ export const createTaxJarOrder = (
   // TaxJar currently supports reporting and filing ONLY in the United States.
   // https://developers.taxjar.com/api/reference/?javascript#transactions
   if (countryCode === "US") {
-    createOrderTransaction(order, taxJarConfig);
+    return await createOrderTransaction(order, taxJarConfig);
   }
+  return;
 };

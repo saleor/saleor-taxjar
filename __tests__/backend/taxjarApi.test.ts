@@ -1,39 +1,33 @@
-import _default from "taxjar/dist/util/request";
-import { createOrderTransaction, fetchTaxes } from "../../backend/taxjarApi";
 import { TaxJarConfig } from "../../backend/types";
-import { getTaxJarConfig } from "../../backend/utils";
 import {
   dummyFetchTaxesPayload,
   dummyFetchTaxesResponse,
   dummyOrderCreatedPayload,
   dummyTaxJarConfig,
 } from "../utils";
-import { TaxForOrderRes } from "taxjar/dist/util/types";
-
-jest.mock("taxjar/dist/util/request");
-
-const mockedTaxJarRequest = <jest.Mock>_default;
 
 describe("TaxJar API handlers", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    jest.resetModules();
   });
 
   it("fetches taxes from taxjar", async () => {
-    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const post = jest.fn((url: any, params: any) => ({
       mockedTaxJarResponseData,
     }));
-    const mockedTaxJarResponse = mockedTaxJarRequest.mockImplementationOnce(
-      () => ({
-        post: post,
-      })
-    );
+
+    jest.doMock("taxjar/dist/util/request", () => ({
+      __esModule: true,
+      default: jest.fn((_) => ({ post: post })),
+    }));
+    const taxJarApi = require("../../backend/taxjarApi");
+
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
 
     const payload = dummyFetchTaxesPayload;
     const config: TaxJarConfig = dummyTaxJarConfig;
 
-    const response = await fetchTaxes(payload, config);
+    await taxJarApi.fetchTaxes(payload, config);
 
     expect(post).toHaveBeenCalledWith({
       params: {
@@ -63,22 +57,22 @@ describe("TaxJar API handlers", () => {
   });
 
   it("takes into account discounts", async () => {
-    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
     const post = jest.fn((url: any, params: any) => ({
       mockedTaxJarResponseData,
     }));
-    const mockedTaxJarResponse = mockedTaxJarRequest.mockImplementationOnce(
-      () => ({
-        post: post,
-      })
-    );
+    jest.doMock("taxjar/dist/util/request", () => ({
+      __esModule: true,
+      default: jest.fn((_) => ({ post: post })),
+    }));
+    const taxJarApi = require("../../backend/taxjarApi");
+    const mockedTaxJarResponseData = dummyFetchTaxesResponse;
 
     const payload = dummyFetchTaxesPayload;
     payload.lines[0].discount = 3.33;
 
     const config: TaxJarConfig = dummyTaxJarConfig;
 
-    const response = await fetchTaxes(payload, config);
+    await taxJarApi.fetchTaxes(payload, config);
 
     expect(post).toHaveBeenCalledWith({
       params: {
@@ -108,17 +102,15 @@ describe("TaxJar API handlers", () => {
   });
 
   it("creates transaction on TaxJar side", () => {
-    dummyOrderCreatedPayload;
     const post = jest.fn((url: any, params: any) => ({}));
-    const mockedTaxJarResponse = mockedTaxJarRequest.mockImplementationOnce(
-      () => ({
-        post: post,
-      })
-    );
+    jest.doMock("taxjar/dist/util/request", () => ({
+      __esModule: true,
+      default: jest.fn((_) => ({ post: post })),
+    }));
+    const taxJarApi = require("../../backend/taxjarApi");
+    const config = dummyTaxJarConfig;
 
-    const config = dummyTaxJarConfig
-
-    createOrderTransaction(dummyOrderCreatedPayload.order, config);
+    taxJarApi.createOrderTransaction(dummyOrderCreatedPayload.order, config);
 
     expect(post).toHaveBeenCalledWith({
       params: {
@@ -139,11 +131,11 @@ describe("TaxJar API handlers", () => {
         ],
         sales_tax: 0,
         shipping: 82.42,
-        to_city: "POOLE",
+        to_city: "Washington",
         to_country: "US",
-        to_state: "",
+        to_state: "DC",
         to_street: "8559 Lakes Avenue ",
-        to_zip: "BH15 1AB",
+        to_zip: "20500",
         transaction_date: "2022-05-27T08:30:44.890527+00:00",
         transaction_id:
           "T3JkZXI6ZThkYWJjMDItYmM3Zi00ZWZjLWFlODgtYWJjMTUwMmE2Zjdm",

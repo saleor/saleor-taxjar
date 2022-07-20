@@ -1,3 +1,4 @@
+import { NextApiRequest, NextApiResponse } from "next";
 import { createMocks, RequestMethod } from "node-mocks-http";
 import { TaxForOrderRes } from "taxjar/dist/types/returnTypes";
 import {
@@ -76,8 +77,8 @@ export const dummyCheckoutPayload: CheckoutPayload = {
   currency: "USD",
   metadata: {},
   private_metadata: {},
-  discounts: []
-}
+  discounts: [],
+};
 
 export const dummyOrderPayload: OrderPayload = {
   channel: {
@@ -122,8 +123,8 @@ export const dummyOrderPayload: OrderPayload = {
   currency: "USD",
   metadata: {},
   private_metadata: {},
-  discounts: []
-}
+  discounts: [],
+};
 
 export const dummyFetchTaxesPayload: FetchTaxesPayload = {
   channel: {
@@ -152,9 +153,9 @@ export const dummyFetchTaxesPayload: FetchTaxesPayload = {
       chargeTaxes: true,
       productMetadata: {},
       productTypeMetadata: {},
-      unitAmount: 28.00,
-      totalAmount: 28.00,
-      discount: 0
+      unitAmount: 28.0,
+      totalAmount: 28.0,
+      discount: 0,
     },
   ],
 };
@@ -225,9 +226,9 @@ export const dummyOrderCreatedPayload = {
       lastName: "Joa22nna",
       streetAddress1: "8559 Lakes Avenue",
       streetAddress2: "",
-      city: "POOLE",
-      countryArea: "",
-      postalCode: "BH15 1AB",
+      city: "Washington",
+      countryArea: "DC",
+      postalCode: "20500",
       country: {
         code: "US",
       },
@@ -315,7 +316,7 @@ export const dummyTaxesResponseForCreatedOrder = {
   },
 };
 
-export const dummyTaxJarConfig:TaxJarConfig = {
+export const dummyTaxJarConfig: TaxJarConfig = {
   shipFrom: {
     fromCountry: "PL",
     fromZip: "50-601",
@@ -325,4 +326,4 @@ export const dummyTaxJarConfig:TaxJarConfig = {
   },
   apiKey: "dummyKey",
   sandbox: true,
-}
+};

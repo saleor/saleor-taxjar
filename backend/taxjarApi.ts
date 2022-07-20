@@ -41,7 +41,7 @@ export const fetchTaxes = async (
   return response;
 };
 
-export const createOrderTransaction = (
+export const createOrderTransaction = async (
   order: OrderSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ) => {
@@ -49,7 +49,7 @@ export const createOrderTransaction = (
 
   const address = order.shippingAddress || order.billingAddress!;
 
-  const response = client.createOrder({
+  const response = await client.createOrder({
     from_country: taxJarConfig.shipFrom.fromCountry,
     from_zip: taxJarConfig.shipFrom.fromZip,
     from_state: taxJarConfig.shipFrom.fromState,
@@ -75,4 +75,5 @@ export const createOrderTransaction = (
       sales_tax: line.totalPrice.tax.amount,
     })),
   });
+  return response;
 };

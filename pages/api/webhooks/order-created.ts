@@ -37,9 +37,11 @@ const handler: NextApiHandler = async (request, response) => {
 
   if (body?.__typename === "OrderCreated") {
     const order = body.order!;
-    createTaxJarOrder(order, taxJarConfig);
-    response.json({ success: true });
-    return;
+    const orderFromTaxJar = await createTaxJarOrder(order, taxJarConfig);
+    if (orderFromTaxJar) {
+      response.json({ success: true });
+      return;
+    }
   }
 
   response.json({ success: false });

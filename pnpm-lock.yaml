@@ -17,6 +17,7 @@ specifiers:
   '@pollyjs/core': ^6.0.5
   '@pollyjs/persister-fs': ^6.0.5
   '@saleor/app-bridge': ^0.1.7
+  '@saleor/app-sdk': ^0.7.0
   '@saleor/macaw-ui': ^0.6.0
   '@types/crypto-js': ^4.1.1
   '@types/jest': ^27.5.1
@@ -60,6 +61,7 @@ dependencies:
   '@material-ui/lab': 4.0.0-alpha.61_rk57v6ucfavk63pf5t4yn4d2na
   '@material-ui/styles': 4.11.5_ohobp6rpsmerwlq5ipwfh5yigy
   '@saleor/app-bridge': 0.1.7
+  '@saleor/app-sdk': 0.7.0
   '@saleor/macaw-ui': 0.6.0_dwbzrken4nfb5rtm4ocsdfcpvu
   '@urql/exchange-auth': 0.1.7_graphql@16.5.0
   clsx: 1.1.1
@@ -2028,6 +2030,15 @@ packages:
       uuid: 8.3.2
     dev: false
 
+  /@saleor/app-sdk/0.7.0:
+    resolution: {integrity: sha512-e2an48MV7608xJIewQzaUaqN8fwmZmQrQx9rY25cjEWjvbM6TuF3YdkZyGH/1M8dsIFaQJmJnv0+uZIChOyywQ==}
+    dependencies:
+      fast-glob: 3.2.11
+      graphql: 16.5.0
+      jose: 4.8.3
+      retes: 0.29.4
+    dev: false
+
   /@saleor/macaw-ui/0.6.0_dwbzrken4nfb5rtm4ocsdfcpvu:
     resolution: {integrity: sha512-SC6QMEzn0waLVDjjHNhecW/H0STCoag+KiijTKxtyqkUgL0grQ6GPNrgL3jkYEiRlIu9b+qPsVwUjNeYVJ9hwA==}
     engines: {node: '>=10'}
@@ -2961,7 +2972,6 @@ packages:
     engines: {node: '>=10.16.0'}
     dependencies:
       streamsearch: 1.1.0
-    dev: true
 
   /bytes/3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -5530,6 +5540,10 @@ packages:
       '@panva/asn1.js': 1.0.0
     dev: false
 
+  /jose/4.8.3:
+    resolution: {integrity: sha512-7rySkpW78d8LBp4YU70Wb7+OTgE3OwAALNVZxhoIhp4Kscp+p/fBkdpxGAMKxvCAMV4QfXBU9m6l9nX/vGwd2g==}
+    dev: false
+
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -7142,6 +7156,12 @@ packages:
       signal-exit: 3.0.7
     dev: true
 
+  /retes/0.29.4:
+    resolution: {integrity: sha512-c6Ji2oGfXN/abuLRVLUT0/eklLuAlargjBR0Ru/FAhgmL2TtEhNl2OQ3UnFSUYXa8a6v9qrEb6UvIp0A6KlJ5w==}
+    dependencies:
+      busboy: 1.6.0
+    dev: false
+
   /reusify/1.0.4:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
@@ -7404,7 +7424,6 @@ packages:
   /streamsearch/1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
-    dev: true
 
   /string-env-interpolation/1.0.1:
     resolution: {integrity: sha512-78lwMoCcn0nNu8LszbP1UA7g55OeE4v7rCeWnM5B453rnNr4aq+5it3FEYtZrSEiMvHZOZ9Jlqb0OD0M2VInqg==}

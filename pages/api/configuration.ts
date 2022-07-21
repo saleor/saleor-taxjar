@@ -17,6 +17,8 @@ import {
   prepareResponseFromMetadata,
 } from "@/backend/configuration";
 
+import {graphQLUrl} from "@saleor/app-sdk/urls"
+
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;
 
@@ -33,7 +35,8 @@ const handler: NextApiHandler = async (request, response) => {
     });
     return;
   }
-  const client = createClient(`https://${saleorDomain}/graphql/`, async () =>
+   
+  const client = createClient(graphQLUrl(saleorDomain), async () =>
     Promise.resolve({ token: getAuthToken() })
   );
 

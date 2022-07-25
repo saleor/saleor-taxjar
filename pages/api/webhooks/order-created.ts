@@ -1,11 +1,11 @@
 import { NextApiHandler } from "next";
-import { TaxJarConfig } from "../../../backend/types";
 import { createTaxJarOrder } from "../../../backend/taxHandlers";
 import { OrderCreatedEventSubscriptionFragment } from "../../../generated/graphql";
 
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
 import { getTaxJarConfig } from "../../../backend/utils";
+import { SALEOR_DOMAIN_HEADER } from "@/constants";
 
 const expectedEvent = "order_created";
 
@@ -24,14 +24,25 @@ const handler: NextApiHandler = async (request, response) => {
     return;
   }
 
-  const body: OrderCreatedEventSubscriptionFragment = request.body;
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based
-  // on channnel used in order.
-  const taxJarConfig = getTaxJarConfig();
+  const body: OrderCreatedEventSubscriptionFragment = request.body;
 
   if (body?.__typename === "OrderCreated") {
     const order = body.order!;
+
+    const taxJarConfig = await getTaxJarConfig(
+      saleorDomain as string,
+      order.channel.slug
+    );
+    if (!taxJarConfig) {
+      response
+        .status(404)
+        .json({ success: false, message: "TaxJar is not configured." });
+      console.log("TaxJar is not configured.");
+      return;
+    }
+
     const orderFromTaxJar = await createTaxJarOrder(order, taxJarConfig);
     if (orderFromTaxJar) {
       response.json({ success: true });

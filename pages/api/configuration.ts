@@ -15,9 +15,9 @@ import {
 import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
-} from "@/backend/configuration";
+} from "@/backend/metaHandlers";
 
-import {graphQLUrl} from "@saleor/app-sdk/urls"
+import { graphQLUrl } from "@saleor/app-sdk/urls";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;
@@ -35,7 +35,7 @@ const handler: NextApiHandler = async (request, response) => {
     });
     return;
   }
-   
+
   const client = createClient(graphQLUrl(saleorDomain), async () =>
     Promise.resolve({ token: getAuthToken() })
   );
@@ -97,6 +97,19 @@ const handler: NextApiHandler = async (request, response) => {
         });
         return;
       }
+      const currentPrivateMetadata = (
+        await client
+          .query<FetchAppMetafieldsQuery, FetchAppMetafieldsQueryVariables>(
+            FetchAppMetafieldsDocument,
+            {
+              keys: channels,
+            }
+          )
+          .toPromise()
+      ).data?.app?.privateMetafields;
+      const currentChannelsConfigurations = currentPrivateMetadata
+        ? prepareResponseFromMetadata(currentPrivateMetadata, channels, false)
+        : null;
 
       privateMetadata = (
         await client
@@ -105,7 +118,10 @@ const handler: NextApiHandler = async (request, response) => {
             UpdateAppMetadataMutationVariables
           >(UpdateAppMetadataDocument, {
             id: appId,
-            input: prepareMetadataFromRequest(JSON.parse(request.body).data),
+            input: prepareMetadataFromRequest(
+              JSON.parse(request.body).data,
+              currentChannelsConfigurations
+            ),
             keys: channels,
           })
           .toPromise()

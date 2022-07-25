@@ -1,10 +1,11 @@
 import { NextApiHandler } from "next";
 import { calculateCheckoutTaxes } from "../../../backend/taxHandlers";
-import { CheckoutPayload, TaxJarConfig } from "../../../backend/types";
+import { CheckoutPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
+import { SALEOR_DOMAIN_HEADER } from "@/constants";
 
 const expectedEvent = "checkout_calculate_taxes";
 
@@ -21,15 +22,24 @@ const handler: NextApiHandler = async (request, response) => {
       .json({ success: false, message: error.message });
     return;
   }
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
   const body: CheckoutPayload[] =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const checkoutPayload: CheckoutPayload = body[0];
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based
-  // on channnel used in checkout.
-  const taxJarConfig = getTaxJarConfig();
+  const taxJarConfig = await getTaxJarConfig(
+    saleorDomain as string,
+    checkoutPayload.channel.slug
+  );
+  if (!taxJarConfig) {
+    response
+      .status(404)
+      .json({ success: false, message: "TaxJar is not configured." });
+    console.log("TaxJar is not configured.");
+    return;
+  }
   const calculatedTaxes = await calculateCheckoutTaxes(
     checkoutPayload,
     taxJarConfig

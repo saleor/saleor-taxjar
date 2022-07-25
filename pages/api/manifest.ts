@@ -9,15 +9,16 @@ import { inferWebhooks } from "@saleor/app-sdk";
 const handler: NextApiHandler = async (request, response) => {
   const baseURL = getBaseURL(request);
 
-  // Temporary turn off the usage of webhooks as Saleor doesn't have an implementation of subscription for tax sync webhooks
-  // const webhooks = await inferWebhooks(baseURL, "pages/api/webhooks", GeneratedGraphQL);
+  // FIXME: Temporary turn off the usage of webhooks as Saleor doesn't have an implementation of subscription
+  //for tax sync webhooks
+  //const webhooks = await inferWebhooks(baseURL, "pages/api/webhooks", GeneratedGraphQL);
 
   const manifest = {
     id: "saleor.taxjar.app",
     version: version,
     name: appName,
     about: "Saleor TaxJar app to provide sales tax compliance for your store.",
-    permissions: ["MANAGE_ORDERS"],
+    permissions: ["MANAGE_ORDERS", "HANDLE_TAXES"],
     appUrl: baseURL,
     dataPrivacyUrl: `${baseURL}/data-privacy`,
     supportUrl: `${baseURL}/support`,

@@ -33,8 +33,10 @@ const handler: NextApiHandler = async (request, response) => {
     });
     return;
   }
-  const client = createClient(`https://${saleorDomain}/graphql/`, async () =>
-    Promise.resolve({ token: getAuthToken() })
+
+  const client = createClient(
+    `https://${saleorDomain}/graphql/`,
+    async () => await Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;

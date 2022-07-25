@@ -1,92 +1,133 @@
-import type { NextPage } from "next";
-import Head from "next/head";
-import { useEffect, useState } from "react";
+import { SidebarMenuItem } from "@saleor/macaw-ui";
 
-const Index: NextPage = () => {
-  const [isBrowser, setIsBrowser] = useState(false);
+import type { NextPage } from "next";
+import { useEffect, useState } from "react";
+import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
+
+import useApp from "../frontend/hooks/useApp";
+import { useChannelsQuery } from "../generated/graphql";
+import ConfigurationDetails, {
+  LoadingState,
+} from "../frontend/components/templates/ConfigurationDetails";
+import { ChannelItem } from "../types/common";
+import { ChannelConfigurationPayload } from "../types/api";
+import { useFetch } from "@/frontend/hooks/useFetch";
+import { requestGetConfiguration, requestSetConfiguration } from "@/fetch";
+import { getCommonErrors } from "@/frontend/utils";
+import { CombinedError } from "urql";
+
+export const menu: SidebarMenuItem[] = [
+  {
+    ariaLabel: "Menu 1",
+    id: "menu1",
+    label: "Menu 1",
+    url: "/section1/",
+  },
+  {
+    ariaLabel: "Menu 2",
+    id: "menu2",
+    label: "Menu 2",
+  },
+];
+
+const Configuration: NextPage = () => {
+  const appState = useApp()?.getState();
+  const [currentChannel, setCurrentChannel] = useState<ChannelItem>();
+  const [channelsQuery] = useChannelsQuery({
+    pause: !appState?.ready,
+  });
+
+  const channels = channelsQuery.data?.channels || [];
+  const channelItems =
+    channels?.map((channel) => ({ id: channel.id, label: channel.name })) || [];
 
   useEffect(() => {
-    setIsBrowser(true);
-  }, []);
+    if (!currentChannel && !!channels?.length) {
+      setCurrentChannel(channelItems[0]);
+    }
+  }, [channelItems.length]);
 
-  const hostname = isBrowser ? window.location.hostname : undefined;
-  const isTunnel = hostname?.includes("saleor.live");
+  const [getConfiguration, getConfigurationFetch] = useFetch(
+    () =>
+      requestGetConfiguration({
+        channelId: currentChannel?.id || "",
+      }),
+    {
+      skip: !appState?.ready || !currentChannel?.id,
+    }
+  );
+  const [setConfiguration, setConfigurationFetch] = useFetch(
+    (data) =>
+      requestSetConfiguration(
+        {
+          channelId: currentChannel?.id || "",
+        },
+        data
+      ),
+    {
+      skip: true,
+    }
+  );
+
+  const configurationData = getConfiguration.data?.data;
+  const configuration =
+    configurationData && currentChannel && configurationData[currentChannel.id];
+
+  useEffect(() => {
+    if (currentChannel?.id) {
+      getConfigurationFetch();
+    }
+  }, [currentChannel]);
+
+  const handleSubmit = async (data: ChannelConfigurationPayload) => {
+    if (!currentChannel) {
+      return;
+    }
+
+    await setConfigurationFetch({
+      data: {
+        ...configurationData,
+        [currentChannel.id]: data,
+      },
+    });
+
+    await getConfigurationFetch();
+  };
+
+  const loading: LoadingState = {
+    sidebar: !appState?.ready || channelsQuery.fetching,
+    configuration:
+      !appState?.ready ||
+      channelsQuery.fetching ||
+      getConfiguration.loading ||
+      setConfiguration.loading ||
+      !configuration,
+  };
+  const errors = [
+    ...getCommonErrors(channelsQuery.error),
+    ...getCommonErrors(getConfiguration.error as Partial<CombinedError>),
+    ...getCommonErrors(setConfiguration.error as Partial<CombinedError>),
+  ];
+  const transitionState: ConfirmButtonTransitionState =
+    loading.sidebar || loading.configuration
+      ? "loading"
+      : !!errors.length
+      ? "error"
+      : "default";
 
   return (
-    <div>
-      <Head>
-        <title>Saleor App Boilerplate</title>
-        <meta name="description" content="Extend Saleor with Apps with ease." />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main>
-        <div>
-          <h1>🦄 🎉 Your app is up and running.</h1>
-          <p>Welcome in the Saleor App Boilerplate.</p>
-        </div>
-        <div>
-          <h2>Next steps:</h2>
-          <ul>
-            {!isTunnel && <li>
-              <span>Use Saleor CLI to setup a live tunnel to your Cloud environment:</span><br/>
-              <code>saleor app tunnel</code>
-            </li>}
-            { isTunnel && <li>
-              <span>You are accessing your Saleor App via the tunnel</span><br/>
-              <code>{hostname}</code>
-            </li>}
-            <li>
-              <span>Write your first webhook:</span><br/>
-              <code>saleor webhook create</code>
-            </li>
-            <li><a target="_blank" href="">Go to your App&apos;s Dashboard</a></li>
-            <li><a target="_blank" href="">Explore your GraphQL API</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h2>Additional resources:</h2>
-          <ul>
-            <li>
-              <a
-                href="https://docs.saleor.io/docs/3.x/developer/extending/apps/asynchronous-webhooks"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Saleor Asynchrnous Webhooks
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://docs.saleor.io/docs/3.x/developer/extending/apps/synchronous-webhooks"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Saleor Synchrnous Webhooks
-              </a>
-            </li>
-            <li>
-              If you&apos;re new to Next.js make sure to check out <a target="_blank" rel="noopener noreferrer" href="https://nextjs.org/learn">Next.js Tutorial</a></li>
-          </ul>
-        </div>
-
-      </main>
-
-      <footer>
-        Powered by{' '}
-        <a
-          href="https://saleor.io"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span>
-            Saleor
-          </span>
-        </a>
-      </footer>
-    </div>
+    <ConfigurationDetails
+      configuration={configuration}
+      channels={channelItems}
+      currentChannel={currentChannel}
+      onChannelClick={setCurrentChannel}
+      loading={loading}
+      errors={errors}
+      saveButtonBarState={transitionState}
+      onCancel={() => undefined}
+      onSubmit={handleSubmit}
+    />
   );
 };
 
-export default Index;
+export default Configuration;

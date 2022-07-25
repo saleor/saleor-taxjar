@@ -10,11 +10,6 @@ import { getTaxJarConfig } from "../../../backend/utils";
 const expectedEvent = "order_created";
 
 const handler: NextApiHandler = async (request, response) => {
-  if (request.method !== "POST") {
-    response.status(405).send({ message: "Only POST requests allowed" });
-    return;
-  }
-
   // FIXME: the validation of webhook should take into account webhook.secretKey,
   // the domain should also be validated
   try {
@@ -22,7 +17,7 @@ const handler: NextApiHandler = async (request, response) => {
   } catch (e: unknown) {
     const error = e as MiddlewareError;
 
-    console.error(error);
+    console.error(error); // For deployment debug purpose
     response
       .status(error.statusCode)
       .json({ success: false, message: error.message });

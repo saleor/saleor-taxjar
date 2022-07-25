@@ -5,33 +5,17 @@ import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
 import MiddlewareError from "../../utils/MiddlewareError";
 import { getAuthToken } from "../../lib/environment";
 import {
-  FetchAppMetadataDocument,
-  FetchAppMetadataQuery,
   UpdateAppMetadataDocument,
   UpdateAppMetadataMutation,
-  MetadataItem,
-  MetadataInput,
+  FetchAppMetafieldsQuery,
+  FetchAppMetafieldsDocument,
+  FetchAppMetafieldsQueryVariables,
+  UpdateAppMetadataMutationVariables,
 } from "../../generated/graphql";
-
-const CONFIGURATION_KEYS = [
-  "THAT_SECRET",
-  "THIS_VALUE",
-];
-
-const prepareMetadataFromRequest = (input: MetadataInput[] | MetadataItem[]) =>
-  input
-    .filter(({ key }) => CONFIGURATION_KEYS.includes(key))
-    .map(({ key, value }) => ({ key, value }));
-
-const prepareResponseFromMetadata = (input: MetadataItem[]) => {
-  const output: MetadataInput[] = [];
-  for (const configurationKey of CONFIGURATION_KEYS) {
-    output.push(
-      input.find(({ key }) => key === configurationKey) ?? { key: configurationKey, value: "" }
-    );
-  }
-  return output.map(({ key, value }) => ({ key, value }));
-};
+import {
+  prepareMetadataFromRequest,
+  prepareResponseFromMetadata,
+} from "@/backend/configuration";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;
@@ -39,49 +23,108 @@ const handler: NextApiHandler = async (request, response) => {
   try {
     saleorDomain = domainMiddleware(request) as string;
     await jwtVerifyMiddleware(request);
-  }
-  catch (e: unknown) {
+  } catch (e: unknown) {
     const error = e as MiddlewareError;
 
-    console.error(error);
-    response
-      .status(error.statusCode)
-      .json({ success: false, message: error.message });
+    console.error(error); // For deployment debug purpose
+    response.status(error.statusCode).json({
+      success: false,
+      error,
+    });
     return;
   }
-
-  const client = createClient(
-    `https://${saleorDomain}/graphql/`,
-    async () => Promise.resolve({ token: getAuthToken() }),
+  const client = createClient(`https://${saleorDomain}/graphql/`, async () =>
+    Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;
+  const channelQuery = request.query.channel;
+  const channels =
+    typeof channelQuery === "string" ? [channelQuery] : channelQuery;
   switch (request.method!) {
     case "GET":
-      privateMetadata  = (
-        (await client.query<FetchAppMetadataQuery>(FetchAppMetadataDocument).toPromise()).data
-      )?.app?.privateMetadata!;
-
-      response.json({ success: true, data: prepareResponseFromMetadata(privateMetadata) });
+      if (!channels?.length) {
+        response.json({
+          success: false,
+          error: { message: "Query param 'channel' is required" },
+        });
+        return;
+      }
+      privateMetadata = (
+        await client
+          .query<FetchAppMetafieldsQuery, FetchAppMetafieldsQueryVariables>(
+            FetchAppMetafieldsDocument,
+            {
+              keys: channels,
+            }
+          )
+          .toPromise()
+      ).data?.app?.privateMetafields;
+      if (privateMetadata) {
+        response.json({
+          success: true,
+          data: prepareResponseFromMetadata(privateMetadata, channels, true),
+        });
+      } else {
+        response.json({
+          success: false,
+          error: { message: "Unable to fetch app configuration." },
+        });
+      }
       break;
     case "POST":
+      if (!channels?.length) {
+        response.json({
+          success: false,
+          error: { message: "Query param 'channel' is required" },
+        });
+        return;
+      }
+
       const appId = (
-        (await client.query<FetchAppMetadataQuery>(FetchAppMetadataDocument).toPromise()).data
-      )?.app?.id;
+        await client
+          .query<FetchAppMetafieldsQuery>(FetchAppMetafieldsDocument)
+          .toPromise()
+      ).data?.app?.id;
+
+      if (!appId) {
+        response.json({
+          success: false,
+          error: { message: "Unable to fetch app id." },
+        });
+        return;
+      }
 
       privateMetadata = (
-        (await client.mutation<UpdateAppMetadataMutation>(
-          UpdateAppMetadataDocument,
-          { id: appId, input: prepareMetadataFromRequest(request.body.data) }
-        ).toPromise()).data
-      )?.updatePrivateMetadata?.item?.privateMetadata!;
+        await client
+          .mutation<
+            UpdateAppMetadataMutation,
+            UpdateAppMetadataMutationVariables
+          >(UpdateAppMetadataDocument, {
+            id: appId,
+            input: prepareMetadataFromRequest(JSON.parse(request.body).data),
+            keys: channels,
+          })
+          .toPromise()
+      ).data?.updatePrivateMetadata?.item?.privateMetafields!;
 
-      response.json({ success: true, data: prepareResponseFromMetadata(privateMetadata) });
+      if (privateMetadata) {
+        response.json({
+          success: true,
+          data: prepareResponseFromMetadata(privateMetadata, channels, true),
+        });
+      } else {
+        response.json({
+          success: false,
+          error: { message: "Unable to fetch app configuration." },
+        });
+      }
       break;
     default:
-      response
-        .status(405)
-        .json({ success: false, message: "Method not allowed." });
+      response.status(405).json({
+        success: false,
+        error: { message: "Method not allowed." },
+      });
   }
 };
 

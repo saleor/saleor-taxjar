@@ -1,0 +1,17 @@
+fragment ChannelData on Channel {
+  id
+  name
+  slug
+}
+
+query Channel($id: ID!) {
+  channel(id: $id) {
+    ...ChannelData
+  }
+}
+
+query Channels {
+  channels {
+    ...ChannelData
+  }
+}

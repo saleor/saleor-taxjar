@@ -1,21 +1,21 @@
 import { NextApiHandler } from "next";
 
-import { createClient } from "../../lib/graphql";
-import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
-import MiddlewareError from "../../utils/MiddlewareError";
-import { getAuthToken } from "../../lib/environment";
-import {
-  UpdateAppMetadataDocument,
-  UpdateAppMetadataMutation,
-  FetchAppMetafieldsQuery,
-  FetchAppMetafieldsDocument,
-  FetchAppMetafieldsQueryVariables,
-  UpdateAppMetadataMutationVariables,
-} from "../../generated/graphql";
 import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
 } from "@/backend/configuration";
+import {
+  FetchAppMetafieldsDocument,
+  FetchAppMetafieldsQuery,
+  FetchAppMetafieldsQueryVariables,
+  UpdateAppMetadataDocument,
+  UpdateAppMetadataMutation,
+  UpdateAppMetadataMutationVariables,
+} from "../../generated/graphql";
+import { getAuthToken } from "../../lib/environment";
+import { createClient } from "../../lib/graphql";
+import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
+import MiddlewareError from "../../utils/MiddlewareError";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;

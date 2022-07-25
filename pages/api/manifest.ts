@@ -1,12 +1,12 @@
-import { NextApiHandler } from "next";
-import { print } from "graphql/language/printer";
 import fg from "fast-glob";
+import { print } from "graphql/language/printer";
+import { NextApiHandler } from "next";
 import path from "path";
 
-import { version, name } from "../../package.json";
+import { appName } from "@/constants";
 import * as GeneratedGraphQL from "../../generated/graphql";
 import { getBaseURL } from "../../lib/middlewares";
-import { appName } from "@/constants";
+import { version } from "../../package.json";
 
 const capitalize = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1);

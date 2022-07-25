@@ -1,11 +1,11 @@
-import React, { useEffect, PropsWithChildren } from "react";
-import type { AppProps } from "next/app";
 import { ThemeProvider } from "@saleor/macaw-ui";
+import type { AppProps } from "next/app";
+import { useEffect } from "react";
 
-import "../styles/globals.css";
+import Head from "next/head";
 import AppBridgeProvider from "../providers/AppBridgeProvider";
 import GraphQLProvider from "../providers/GraphQLProvider";
-import Head from "next/head";
+import "../styles/globals.css";
 
 const SaleorApp = ({ Component, pageProps }: AppProps) => {
   useEffect(() => {

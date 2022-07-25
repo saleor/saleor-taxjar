@@ -35,10 +35,6 @@ export const setupRecording = () => {
       mode = "replay";
       recordIfMissing = false;
       break;
-    case "offline":
-      mode = "replay";
-      recordIfMissing = false;
-      break;
   }
 
   if (process.env.CI) {

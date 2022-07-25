@@ -1,23 +1,23 @@
 import { NextApiHandler } from "next";
 
-import { createClient } from "../../lib/graphql";
-import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
-import MiddlewareError from "../../utils/MiddlewareError";
-import { getAuthToken } from "../../lib/environment";
-import {
-  UpdateAppMetadataDocument,
-  UpdateAppMetadataMutation,
-  FetchAppMetafieldsQuery,
-  FetchAppMetafieldsDocument,
-  FetchAppMetafieldsQueryVariables,
-  UpdateAppMetadataMutationVariables,
-} from "../../generated/graphql";
 import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
 } from "@/backend/configuration";
+import {
+  FetchAppMetafieldsDocument,
+  FetchAppMetafieldsQuery,
+  FetchAppMetafieldsQueryVariables,
+  UpdateAppMetadataDocument,
+  UpdateAppMetadataMutation,
+  UpdateAppMetadataMutationVariables,
+} from "../../generated/graphql";
+import { getAuthToken } from "../../lib/environment";
+import { createClient } from "../../lib/graphql";
+import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
+import MiddlewareError from "../../utils/MiddlewareError";
 
-import {graphQLUrl} from "@saleor/app-sdk/urls"
+import { graphQLUrl } from "@saleor/app-sdk/urls";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;
@@ -35,9 +35,9 @@ const handler: NextApiHandler = async (request, response) => {
     });
     return;
   }
-   
-  const client = createClient(graphQLUrl(saleorDomain), async () =>
-    Promise.resolve({ token: getAuthToken() })
+  const client = createClient(
+    graphQLUrl(saleorDomain),
+    async () => await Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;

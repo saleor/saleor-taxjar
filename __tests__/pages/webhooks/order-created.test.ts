@@ -1,9 +1,10 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
-// import { createOrderTransaction } from "../../../backend/taxjarApi";
 import { PollyServer } from "@pollyjs/core";
-import { getTaxJarConfig } from "../../../backend/utils";
-// import handler from "../../../pages/api/webhooks/order-created";
+import { NextApiRequest, NextApiResponse } from "next";
+import * as taxJarRequest from "taxjar/dist/util/request";
+import { Request } from "taxjar/dist/util/types";
+import * as orderCreated from "../../../pages/api/webhooks/order-created";
 import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
 import {
   dummyOrderCreatedPayload,
@@ -25,19 +26,15 @@ describe("api/webhooks/order-created", () => {
   beforeEach(() => {
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);
-    jest.unmock("taxjar/dist/util/request");
-    jest.resetModules();
   });
 
   it("rejects when saleor domain is missing", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const domain = undefined;
     const { req, res } = mockRequest({
@@ -49,21 +46,24 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it("rejects when saleor event is missing", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const event = undefined;
     const { req, res } = mockRequest({
@@ -75,21 +75,24 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it.skip("rejects when saleor signature is empty", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const signature = undefined;
     const { req, res } = mockRequest({
@@ -102,21 +105,24 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it.skip("rejects when saleor signature is incorrect", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const signature = "incorrect-sig";
     const { req, res } = mockRequest({
@@ -129,15 +135,18 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it("creates transaction on TaxJar side for new order", async () => {
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
-
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
@@ -147,7 +156,10 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(200);
   });
@@ -156,11 +168,9 @@ describe("api/webhooks/order-created", () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const orderCreated = require("../../../pages/api/webhooks/order-created");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const { req, res } = mockRequest({
       method: "POST",
@@ -173,9 +183,14 @@ describe("api/webhooks/order-created", () => {
     orderPayload.order.shippingAddress.country.code = "PL";
     req.body = orderPayload;
 
-    await orderCreated.default(req, res);
+    await orderCreated.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(post).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
+
+    mockTaxJarRequest.mockRestore();
   });
 });

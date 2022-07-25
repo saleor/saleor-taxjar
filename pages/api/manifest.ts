@@ -1,10 +1,8 @@
 import { NextApiHandler } from "next";
 
-import { version } from "../../package.json";
-import * as GeneratedGraphQL from "../../generated/graphql";
-import { getBaseURL } from "../../lib/middlewares";
 import { appName } from "@/constants";
-import { inferWebhooks } from "@saleor/app-sdk";
+import { getBaseURL } from "../../lib/middlewares";
+import { version } from "../../package.json";
 
 const handler: NextApiHandler = async (request, response) => {
   const baseURL = getBaseURL(request);

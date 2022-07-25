@@ -1,6 +1,6 @@
 import { NextApiHandler } from "next";
 import { calculateOrderTaxes } from "../../../backend/taxHandlers";
-import { OrderPayload, TaxJarConfig } from "../../../backend/types";
+import { OrderPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 
 import { webhookMiddleware } from "../../../lib/middlewares";

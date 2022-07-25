@@ -26,12 +26,15 @@ specifiers:
   '@types/react': 18.0.9
   '@types/react-dom': 18.0.3
   '@types/setup-polly-jest': ^0.5.1
+  '@typescript-eslint/eslint-plugin': ^5.30.7
+  '@typescript-eslint/parser': ^5.30.7
   '@urql/exchange-auth': ^0.1.7
   autoprefixer: ^10.4.7
   babel-plugin-formatjs: ^10.3.23
   clsx: ^1.1.1
   crypto-js: ^4.1.1
-  eslint: 8.15.0
+  eslint: '>=5.16.0'
+  eslint-config-google: ^0.14.0
   eslint-config-next: 12.1.6
   fast-glob: ^3.2.11
   graphql: ^16.5.0
@@ -99,9 +102,12 @@ devDependencies:
   '@types/react': 18.0.9
   '@types/react-dom': 18.0.3
   '@types/setup-polly-jest': 0.5.1
+  '@typescript-eslint/eslint-plugin': 5.30.7_decurwxw4cngc7k7cwkxnknbam
+  '@typescript-eslint/parser': 5.30.7_hcfsmds2fshutdssjqluwm76uu
   autoprefixer: 10.4.7_postcss@8.4.13
   babel-plugin-formatjs: 10.3.23_ts-jest@28.0.3
   eslint: 8.15.0
+  eslint-config-google: 0.14.0_eslint@8.15.0
   eslint-config-next: 12.1.6_6vdljae35l7howjttefzzsim3e
   jest: 28.1.0_@types+node@17.0.32
   node-mocks-http: 1.11.0
@@ -2224,6 +2230,10 @@ packages:
     resolution: {integrity: sha512-FhpRzf927MNQdRZP0J5DLIdTXhjLYzeUTmLAu69mnVksLH9CJY3IuSeEgbKUki7GQZm0WqDkGzyxju2EZGD2wA==}
     dev: true
 
+  /@types/json-schema/7.0.11:
+    resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
+    dev: true
+
   /@types/json-stable-stringify/1.0.34:
     resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
     dev: true
@@ -2354,6 +2364,33 @@ packages:
       '@types/yargs-parser': 21.0.0
     dev: true
 
+  /@typescript-eslint/eslint-plugin/5.30.7_decurwxw4cngc7k7cwkxnknbam:
+    resolution: {integrity: sha512-l4L6Do+tfeM2OK0GJsU7TUcM/1oN/N25xHm3Jb4z3OiDU4Lj8dIuxX9LpVMS9riSXQs42D1ieX7b85/r16H9Fw==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      '@typescript-eslint/parser': ^5.0.0
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/parser': 5.30.7_hcfsmds2fshutdssjqluwm76uu
+      '@typescript-eslint/scope-manager': 5.30.7
+      '@typescript-eslint/type-utils': 5.30.7_hcfsmds2fshutdssjqluwm76uu
+      '@typescript-eslint/utils': 5.30.7_hcfsmds2fshutdssjqluwm76uu
+      debug: 4.3.4
+      eslint: 8.15.0
+      functional-red-black-tree: 1.0.1
+      ignore: 5.2.0
+      regexpp: 3.2.0
+      semver: 7.3.7
+      tsutils: 3.21.0_typescript@4.6.4
+      typescript: 4.6.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@typescript-eslint/parser/5.30.7_hcfsmds2fshutdssjqluwm76uu:
     resolution: {integrity: sha512-Rg5xwznHWWSy7v2o0cdho6n+xLhK2gntImp0rJroVVFkcYFYQ8C8UJTSuTw/3CnExBmPjycjmUJkxVmjXsld6A==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -2382,6 +2419,25 @@ packages:
       '@typescript-eslint/visitor-keys': 5.30.7
     dev: true
 
+  /@typescript-eslint/type-utils/5.30.7_hcfsmds2fshutdssjqluwm76uu:
+    resolution: {integrity: sha512-nD5qAE2aJX/YLyKMvOU5jvJyku4QN5XBVsoTynFrjQZaDgDV6i7QHFiYCx10wvn7hFvfuqIRNBtsgaLe0DbWhw==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: '*'
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/utils': 5.30.7_hcfsmds2fshutdssjqluwm76uu
+      debug: 4.3.4
+      eslint: 8.15.0
+      tsutils: 3.21.0_typescript@4.6.4
+      typescript: 4.6.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@typescript-eslint/types/5.30.7:
     resolution: {integrity: sha512-ocVkETUs82+U+HowkovV6uxf1AnVRKCmDRNUBUUo46/5SQv1owC/EBFkiu4MOHeZqhKz2ktZ3kvJJ1uFqQ8QPg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -2406,6 +2462,24 @@ packages:
       typescript: 4.6.4
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@typescript-eslint/utils/5.30.7_hcfsmds2fshutdssjqluwm76uu:
+    resolution: {integrity: sha512-Z3pHdbFw+ftZiGUnm1GZhkJgVqsDL5CYW2yj+TB2mfXDFOMqtbzQi2dNJIyPqPbx9mv2kUxS1gU+r2gKlKi1rQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
+    dependencies:
+      '@types/json-schema': 7.0.11
+      '@typescript-eslint/scope-manager': 5.30.7
+      '@typescript-eslint/types': 5.30.7
+      '@typescript-eslint/typescript-estree': 5.30.7_typescript@4.6.4
+      eslint: 8.15.0
+      eslint-scope: 5.1.1
+      eslint-utils: 3.0.0_eslint@8.15.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
     dev: true
 
   /@typescript-eslint/visitor-keys/5.30.7:
@@ -3747,6 +3821,15 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /eslint-config-google/0.14.0_eslint@8.15.0:
+    resolution: {integrity: sha512-WsbX4WbjuMvTdeVL6+J3rK1RGhCTqjsFjX7UMSMgZiyxxaNLkoJENbrGExzERFeoTpGw3F3FypTiWAP9ZXzkEw==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      eslint: '>=5.16.0'
+    dependencies:
+      eslint: 8.15.0
+    dev: true
+
   /eslint-config-next/12.1.6_6vdljae35l7howjttefzzsim3e:
     resolution: {integrity: sha512-qoiS3g/EPzfCTkGkaPBSX9W0NGE/B1wNO3oWrd76QszVGrdpLggNqcO8+LR6MB0CNqtp9Q8NoeVrxNVbzM9hqA==}
     peerDependencies:
@@ -3912,6 +3995,14 @@ packages:
       string.prototype.matchall: 4.0.7
     dev: true
 
+  /eslint-scope/5.1.1:
+    resolution: {integrity: sha512-2NxwbF/hZ0KpepYN0cNbo+FN6XoK7GaHlQhgx/hIZl6Va0bF45RQOOwhLIy8lQDbuCiadSLCBnH2CFYquit5bw==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      esrecurse: 4.3.0
+      estraverse: 4.3.0
+    dev: true
+
   /eslint-scope/7.1.1:
     resolution: {integrity: sha512-QKQM/UXpIiHcLqJ5AOyIW7XZmzjkzQXYE54n1++wb0u9V/abW3l9uQnxX8Z5Xd18xyKIMTUAyQ0k1e8pz6LUrw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -4011,6 +4102,11 @@ packages:
     engines: {node: '>=4.0'}
     dependencies:
       estraverse: 5.3.0
+    dev: true
+
+  /estraverse/4.3.0:
+    resolution: {integrity: sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw==}
+    engines: {node: '>=4.0'}
     dev: true
 
   /estraverse/5.3.0:

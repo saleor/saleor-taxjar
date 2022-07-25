@@ -1,16 +1,14 @@
-import { check } from "prettier";
-import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
 import { createOrderTransaction, fetchTaxes } from "./taxjarApi";
 import {
   CheckoutPayload,
-  ResponseTaxPayload,
-  FetchTaxesPayload,
-  TaxJarConfig,
-  OrderPayload,
-  LinePayload,
   DiscountPayload,
   FetchTaxesLinePayload,
+  FetchTaxesPayload,
+  LinePayload,
+  OrderPayload,
+  ResponseTaxPayload,
+  TaxJarConfig,
 } from "./types";
 
 const getDiscountForLine = (
@@ -37,10 +35,9 @@ const prepareLinesPayload = (
     (total, current) => total + Number(current.total_amount),
     0
   );
-  const discountsSum = discounts?.reduce(
-    (total, current) => total + Number(current.amount),
-    0
-  ) || 0;
+  const discountsSum =
+    discounts?.reduce((total, current) => total + Number(current.amount), 0) ||
+    0;
 
   // Make sure that totalDiscount doesn't exceed a sum of all lines
   const totalDiscount =
@@ -71,7 +68,7 @@ const calculateTaxes = async (
   taxJarConfig: TaxJarConfig
 ): Promise<{ data: ResponseTaxPayload }> => {
   const taxResposne = await fetchTaxes(taxData, taxJarConfig);
-  
+
   const taxDetails = taxResposne.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
 
@@ -122,7 +119,10 @@ export const calculateCheckoutTaxes = async (
 ): Promise<{ data: ResponseTaxPayload }> => {
   const taxData: FetchTaxesPayload = {
     address: checkoutPayload.address,
-    lines: prepareLinesPayload(checkoutPayload.lines, checkoutPayload.discounts),
+    lines: prepareLinesPayload(
+      checkoutPayload.lines,
+      checkoutPayload.discounts
+    ),
     channel: checkoutPayload.channel,
     shipping_amount: checkoutPayload.shipping_amount,
     shipping_name: checkoutPayload.shipping_name,

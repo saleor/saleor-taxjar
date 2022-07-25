@@ -1,14 +1,12 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { createMocks, RequestMethod } from "node-mocks-http";
 import { TaxForOrderRes } from "taxjar/dist/types/returnTypes";
 import {
   CheckoutPayload,
   FetchTaxesPayload,
   OrderPayload,
-  ResponseTaxPayload,
   TaxJarConfig,
 } from "../backend/types";
-import { Checkout } from "../generated/graphql";
+
 type RequestConfiguration = {
   method: RequestMethod;
   event?: string;

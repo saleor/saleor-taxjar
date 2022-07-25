@@ -1,14 +1,19 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
-import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
 import { PollyServer } from "@pollyjs/core";
+import { ResponseTaxPayload } from "../../../backend/types";
+import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
 import {
   dummyCheckoutPayload,
   dummyFetchTaxesPayload,
   dummyFetchTaxesResponse,
   mockRequest,
 } from "../../utils";
-import { ResponseTaxPayload } from "../../../backend/types";
+
+import { NextApiRequest, NextApiResponse } from "next";
+import * as taxJarRequest from "taxjar/dist/util/request";
+import { Request } from "taxjar/dist/util/types";
+import * as calculateTaxes from "../../../pages/api/webhooks/checkout-calculate-taxes";
 
 describe("api/webhooks/checkout-calculate-taxes", () => {
   beforeAll(() => {
@@ -24,19 +29,15 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
   beforeEach(() => {
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);
-    jest.unmock("taxjar/dist/util/request");
-    jest.resetModules();
   });
 
   it("rejects when saleor domain is missing", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyFetchTaxesResponse,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const domain = undefined;
     const { req, res } = mockRequest({
@@ -48,22 +49,24 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it("rejects when saleor event is missing", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyFetchTaxesResponse,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const event = undefined;
     const { req, res } = mockRequest({
@@ -75,21 +78,24 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it.skip("rejects when saleor signature is empty", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyFetchTaxesResponse,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const signature = undefined;
     const { req, res } = mockRequest({
@@ -102,22 +108,24 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it.skip("rejects when saleor signature is incorrect", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyFetchTaxesResponse,
     }));
-    jest.doMock("taxjar/dist/util/request", () => ({
-      __esModule: true,
-      default: jest.fn((_) => ({ post: post })),
-    }));
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
+    const mockTaxJarRequest = jest
+      .spyOn(taxJarRequest, "default")
+      .mockImplementation((_) => ({ post: post } as unknown as Request));
 
     const signature = "incorrect-sig";
     const { req, res } = mockRequest({
@@ -130,15 +138,18 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     expect(res.statusCode).toBe(400);
     expect(post).not.toHaveBeenCalled();
+
+    mockTaxJarRequest.mockRestore();
   });
 
   it("fetches taxes for checkout", async () => {
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
     const { req, res } = mockRequest({
       method: "POST",
       event: "checkout_calculate_taxes",
@@ -148,8 +159,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyCheckoutPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     const data: ResponseTaxPayload = res._getJSONData();
 
@@ -164,8 +177,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
   });
 
   it("propagates discounts over lines", async () => {
-    const calculateTaxes = require("../../../pages/api/webhooks/checkout-calculate-taxes");
-
     const { req, res } = mockRequest({
       method: "POST",
       event: "checkout_calculate_taxes",
@@ -180,8 +191,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     checkoutPayload.lines = [linePayload, linePayload];
     req.body = [checkoutPayload];
 
-    // @ts-ignore
-    await calculateTaxes.default(req, res);
+    await calculateTaxes.default(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
 
     const data: ResponseTaxPayload = res._getJSONData();
 

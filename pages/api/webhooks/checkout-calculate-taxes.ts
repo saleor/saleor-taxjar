@@ -3,9 +3,9 @@ import { calculateCheckoutTaxes } from "../../../backend/taxHandlers";
 import { CheckoutPayload } from "../../../backend/types";
 import { getTaxJarConfig } from "../../../backend/utils";
 
+import { SALEOR_DOMAIN_HEADER } from "@/constants";
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
-import { SALEOR_DOMAIN_HEADER } from "@/constants";
 
 const expectedEvent = "checkout_calculate_taxes";
 

@@ -2,10 +2,10 @@ import { NextApiHandler } from "next";
 import { createTaxJarOrder } from "../../../backend/taxHandlers";
 import { OrderCreatedEventSubscriptionFragment } from "../../../generated/graphql";
 
+import { SALEOR_DOMAIN_HEADER } from "@/constants";
+import { getTaxJarConfig } from "../../../backend/utils";
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
-import { getTaxJarConfig } from "../../../backend/utils";
-import { SALEOR_DOMAIN_HEADER } from "@/constants";
 
 const expectedEvent = "order_created";
 

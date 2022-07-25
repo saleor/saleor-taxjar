@@ -1,7 +1,7 @@
 import Taxjar from "taxjar";
 import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
-import { CheckoutPayload, FetchTaxesPayload, TaxJarConfig } from "./types";
+import { FetchTaxesPayload, TaxJarConfig } from "./types";
 
 const getTaxjarClient = (taxJarConfig: TaxJarConfig) =>
   new Taxjar({

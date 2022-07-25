@@ -48,7 +48,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
     await calculateTaxes.default(req, res);
 
     expect(res.statusCode).toBe(400);
@@ -102,7 +101,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
     await calculateTaxes.default(req, res);
 
     expect(res.statusCode).toBe(400);
@@ -130,7 +128,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyFetchTaxesPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
     await calculateTaxes.default(req, res);
 
     expect(res.statusCode).toBe(400);
@@ -148,7 +145,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = dummyCheckoutPayload;
     req.body = [checkoutPayload];
 
-    // @ts-ignore
     await calculateTaxes.default(req, res);
 
     const data: ResponseTaxPayload = res._getJSONData();
@@ -180,7 +176,6 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     checkoutPayload.lines = [linePayload, linePayload];
     req.body = [checkoutPayload];
 
-    // @ts-ignore
     await calculateTaxes.default(req, res);
 
     const data: ResponseTaxPayload = res._getJSONData();

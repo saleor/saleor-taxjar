@@ -4,6 +4,7 @@ import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
 } from "@/backend/configuration";
+import { graphQLUrl } from "@saleor/app-sdk/urls";
 import {
   FetchAppMetafieldsDocument,
   FetchAppMetafieldsQuery,
@@ -16,8 +17,6 @@ import { getAuthToken } from "../../lib/environment";
 import { createClient } from "../../lib/graphql";
 import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
 import MiddlewareError from "../../utils/MiddlewareError";
-
-import { graphQLUrl } from "@saleor/app-sdk/urls";
 
 const handler: NextApiHandler = async (request, response) => {
   let saleorDomain: string;

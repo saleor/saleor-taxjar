@@ -4,7 +4,7 @@ import { appName } from "@/constants";
 import { getBaseURL } from "../../lib/middlewares";
 import { version } from "../../package.json";
 
-const handler: NextApiHandler = async (request, response) => {
+const handler: NextApiHandler = (request, response) => {
   const baseURL = getBaseURL(request);
 
   // Temporary turn off the usage of webhooks as Saleor doesn't have an implementation of subscription for tax sync webhooks

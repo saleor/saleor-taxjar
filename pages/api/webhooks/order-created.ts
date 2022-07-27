@@ -1,11 +1,10 @@
 import { NextApiHandler } from "next";
-import { TaxJarConfig } from "../../../backend/types";
 import { createTaxJarOrder } from "../../../backend/taxHandlers";
 import { OrderCreatedEventSubscriptionFragment } from "../../../generated/graphql";
 
+import { getTaxJarConfig } from "../../../backend/utils";
 import { webhookMiddleware } from "../../../lib/middlewares";
 import MiddlewareError from "../../../utils/MiddlewareError";
-import { getTaxJarConfig } from "../../../backend/utils";
 
 const expectedEvent = "order_created";
 
@@ -32,9 +31,11 @@ const handler: NextApiHandler = async (request, response) => {
 
   if (body?.__typename === "OrderCreated") {
     const order = body.order!;
-    createTaxJarOrder(order, taxJarConfig);
-    response.json({ success: true });
-    return;
+    const orderFromTaxJar = await createTaxJarOrder(order, taxJarConfig);
+    if (orderFromTaxJar) {
+      response.json({ success: true });
+      return;
+    }
   }
 
   response.json({ success: false });

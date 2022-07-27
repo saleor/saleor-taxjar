@@ -1,7 +1,7 @@
 import Taxjar from "taxjar";
 import { TaxForOrderRes } from "taxjar/dist/util/types";
 import { OrderSubscriptionFragment } from "../generated/graphql";
-import { CheckoutPayload, FetchTaxesPayload, TaxJarConfig } from "./types";
+import { FetchTaxesPayload, TaxJarConfig } from "./types";
 
 const getTaxjarClient = (taxJarConfig: TaxJarConfig) =>
   new Taxjar({
@@ -32,17 +32,16 @@ export const fetchTaxes = async (
       id: line.id,
       quantity: line.quantity,
       product_tax_code:
-        line.product_metadata.taxjar_tax_code ||
-        line.product_type_metadata.taxjar_tax_code,
-      unit_price: Number(line.unit_amount),
-      // FIXME: take into account a discount that we recieve in CheckoutPayload
-      discount: 0,
+        line.productMetadata.taxjar_tax_code ||
+        line.productTypeMetadata.taxjar_tax_code,
+      unit_price: line.unitAmount,
+      discount: line.discount,
     })),
   });
   return response;
 };
 
-export const createOrderTransaction = (
+export const createOrderTransaction = async (
   order: OrderSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ) => {
@@ -50,7 +49,7 @@ export const createOrderTransaction = (
 
   const address = order.shippingAddress || order.billingAddress!;
 
-  const response = client.createOrder({
+  const response = await client.createOrder({
     from_country: taxJarConfig.shipFrom.fromCountry,
     from_zip: taxJarConfig.shipFrom.fromZip,
     from_state: taxJarConfig.shipFrom.fromState,
@@ -76,4 +75,5 @@ export const createOrderTransaction = (
       sales_tax: line.totalPrice.tax.amount,
     })),
   });
+  return response;
 };

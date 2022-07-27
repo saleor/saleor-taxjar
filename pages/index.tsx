@@ -1,20 +1,20 @@
 import { SidebarMenuItem } from "@saleor/macaw-ui";
 
+import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 import type { NextPage } from "next";
 import { useEffect, useState } from "react";
-import { ConfirmButtonTransitionState } from "@saleor/macaw-ui";
 
-import useApp from "../frontend/hooks/useApp";
-import { useChannelsQuery } from "../generated/graphql";
+import { requestGetConfiguration, requestSetConfiguration } from "@/fetch";
+import { useFetch } from "@/frontend/hooks/useFetch";
+import { getCommonErrors } from "@/frontend/utils";
+import { CombinedError } from "urql";
 import ConfigurationDetails, {
   LoadingState,
 } from "../frontend/components/templates/ConfigurationDetails";
-import { ChannelItem } from "../types/common";
+import useApp from "../frontend/hooks/useApp";
+import { useChannelsQuery } from "../generated/graphql";
 import { ChannelConfigurationPayload } from "../types/api";
-import { useFetch } from "@/frontend/hooks/useFetch";
-import { requestGetConfiguration, requestSetConfiguration } from "@/fetch";
-import { getCommonErrors } from "@/frontend/utils";
-import { CombinedError } from "urql";
+import { ChannelItem } from "../types/common";
 
 export const menu: SidebarMenuItem[] = [
   {

@@ -3,8 +3,10 @@ import { TaxForOrderRes } from "taxjar/dist/types/returnTypes";
 import {
   CheckoutPayload,
   FetchTaxesPayload,
-  ResponseTaxPayload,
+  OrderPayload,
+  TaxJarConfig,
 } from "../backend/types";
+
 type RequestConfiguration = {
   method: RequestMethod;
   event?: string;
@@ -30,7 +32,7 @@ export const mockRequest = (configuration: RequestConfiguration) => {
   return { req, res };
 };
 
-export const dummyFetchTaxesPayload: FetchTaxesPayload = {
+export const dummyCheckoutPayload: CheckoutPayload = {
   channel: {
     slug: "channel-pln",
     currency_code: "PLN",
@@ -64,6 +66,94 @@ export const dummyFetchTaxesPayload: FetchTaxesPayload = {
       product_type_metadata: {},
       unit_amount: "28.00",
       total_amount: "28.00",
+    },
+  ],
+  id: "1234",
+  user_id: null,
+  user_public_metadata: {},
+  included_taxes_in_prices: false,
+  currency: "USD",
+  metadata: {},
+  private_metadata: {},
+  discounts: [],
+};
+
+export const dummyOrderPayload: OrderPayload = {
+  channel: {
+    slug: "channel-pln",
+    currency_code: "PLN",
+  },
+  address: {
+    first_name: "Ann22a",
+    last_name: "Joa22nna",
+    company_name: "",
+    street_address_1: "8559 Lakes Avenue",
+    street_address_2: "",
+    city: "POOLE",
+    city_area: "",
+    postal_code: "BH15 1AB",
+    country: "GB",
+    country_area: "",
+    phone: "+12125094995",
+  },
+  shipping_amount: "10.00",
+  shipping_name: "DB Schenker",
+  lines: [
+    {
+      id: "Q2hlY2tvdXRMaW5lOjU=",
+      sku: "21438542",
+      variant_id: "UHJvZHVjdFZhcmlhbnQ6MjI1",
+      quantity: 1,
+      charge_taxes: true,
+      full_name: "Bean Juice (2l)",
+      product_name: "Bean Juice",
+      variant_name: "2l",
+      product_metadata: {},
+      product_type_metadata: {},
+      unit_amount: "28.00",
+      total_amount: "28.00",
+    },
+  ],
+  id: "1234",
+  user_id: null,
+  user_public_metadata: {},
+  included_taxes_in_prices: false,
+  currency: "USD",
+  metadata: {},
+  private_metadata: {},
+  discounts: [],
+};
+
+export const dummyFetchTaxesPayload: FetchTaxesPayload = {
+  channel: {
+    slug: "channel-pln",
+    currency_code: "PLN",
+  },
+  address: {
+    first_name: "Ann22a",
+    last_name: "Joa22nna",
+    company_name: "",
+    street_address_1: "8559 Lakes Avenue",
+    street_address_2: "",
+    city: "POOLE",
+    city_area: "",
+    postal_code: "BH15 1AB",
+    country: "GB",
+    country_area: "",
+    phone: "+12125094995",
+  },
+  shipping_amount: "10.00",
+  shipping_name: "DB Schenker",
+  lines: [
+    {
+      id: "Q2hlY2tvdXRMaW5lOjU=",
+      quantity: 1,
+      chargeTaxes: true,
+      productMetadata: {},
+      productTypeMetadata: {},
+      unitAmount: 28.0,
+      totalAmount: 28.0,
+      discount: 0,
     },
   ],
 };
@@ -134,9 +224,9 @@ export const dummyOrderCreatedPayload = {
       lastName: "Joa22nna",
       streetAddress1: "8559 Lakes Avenue",
       streetAddress2: "",
-      city: "POOLE",
-      countryArea: "",
-      postalCode: "BH15 1AB",
+      city: "Washington",
+      countryArea: "DC",
+      postalCode: "20500",
       country: {
         code: "US",
       },
@@ -222,4 +312,16 @@ export const dummyTaxesResponseForCreatedOrder = {
       },
     ],
   },
+};
+
+export const dummyTaxJarConfig: TaxJarConfig = {
+  shipFrom: {
+    fromCountry: "PL",
+    fromZip: "50-601",
+    fromState: "",
+    fromCity: "Wroclaw",
+    fromStreet: "Teczowa 7",
+  },
+  apiKey: "dummyKey",
+  sandbox: true,
 };

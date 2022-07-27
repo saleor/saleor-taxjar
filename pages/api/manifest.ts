@@ -1,41 +1,14 @@
-import fg from "fast-glob";
-import { print } from "graphql/language/printer";
-import { NextApiHandler } from "next";
-import path from "path";
-
 import { appName } from "@/constants";
-import * as GeneratedGraphQL from "../../generated/graphql";
+import { NextApiHandler } from "next";
+
 import { getBaseURL } from "../../lib/middlewares";
 import { version } from "../../package.json";
 
-const capitalize = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1);
-const dropFileExtension = (filename: string) => path.parse(filename).name;
-
-const inferWebhooks = async (baseURL: string) => {
-  const entries = await fg(["*.ts"], { cwd: "pages/api/webhooks" });
-
-  return entries.map(dropFileExtension).map((name: string) => {
-    const camelcaseName = name.split("-").map(capitalize).join("");
-    const statement = `${camelcaseName}SubscriptionDocument`;
-    const query =
-      statement in GeneratedGraphQL
-        ? print((GeneratedGraphQL as any)[statement])
-        : null;
-
-    return {
-      name,
-      asyncEvents: [name.toUpperCase().replace("-", "_")],
-      query,
-      targetUrl: `${baseURL}/api/webhooks/${name}`,
-    };
-  });
-};
-
-const handler: NextApiHandler = async (request, response) => {
+const handler: NextApiHandler = (request, response) => {
   const baseURL = getBaseURL(request);
 
-  const webhooks = await inferWebhooks(baseURL);
+  // Temporary turn off the usage of webhooks as Saleor doesn't have an implementation of subscription for tax sync webhooks
+  // const webhooks = await inferWebhooks(baseURL, "pages/api/webhooks", GeneratedGraphQL);
 
   const manifest = {
     id: "saleor.taxjar.app",
@@ -47,16 +20,7 @@ const handler: NextApiHandler = async (request, response) => {
     dataPrivacyUrl: `${baseURL}/data-privacy`,
     supportUrl: `${baseURL}/support`,
     tokenTargetUrl: `${baseURL}/api/register`,
-    webhooks,
-    extensions: [
-      {
-        label: "Orders in an app",
-        mount: "NAVIGATION_ORDERS",
-        target: "APP_PAGE",
-        permissions: ["MANAGE_ORDERS"],
-        url: "/orders",
-      },
-    ],
+    // webhooks,
   };
 
   response.json(manifest);

@@ -1,9 +1,10 @@
 import { NextApiRequest } from "next";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import jwks , { CertSigningKey, RsaSigningKey } from "jwks-rsa";
+import jwks, { CertSigningKey, RsaSigningKey } from "jwks-rsa";
 
 import * as Constants from "../constants";
 import MiddlewareError from "../utils/MiddlewareError";
+import { jwksUrl } from "@saleor/app-sdk/urls";
 
 export const getBaseURL = (req: NextApiRequest): string => {
   const { host, "x-forwarded-proto": protocol = "http" } = req.headers;
@@ -30,9 +31,9 @@ export const eventMiddleware = (
 };
 export const requestType = (request: NextApiRequest) => {
   if (request.method !== "POST") {
-    throw new MiddlewareError("Only POST requests allowed", 405)
+    throw new MiddlewareError("Only POST requests allowed", 405);
   }
-}
+};
 
 export const webhookMiddleware = (
   request: NextApiRequest,
@@ -46,7 +47,7 @@ export const webhookMiddleware = (
 export const jwtVerifyMiddleware = async (request: NextApiRequest) => {
   const {
     [Constants.SALEOR_DOMAIN_HEADER]: domain,
-    "authorization-bearer": token
+    "authorization-bearer": token,
   } = request.headers;
 
   let tokenClaims;
@@ -60,11 +61,19 @@ export const jwtVerifyMiddleware = async (request: NextApiRequest) => {
   if (tokenClaims === null) {
     throw new MiddlewareError("Missing token.", 400);
   }
-  if ((tokenClaims as JwtPayload).iss !== domain) {
+
+  if (!domain) {
+    throw new MiddlewareError("Missing domain.", 400);
+  }
+
+  if (
+    domain !== "localhost:8000" &&
+    (tokenClaims as JwtPayload).iss !== domain
+  ) {
     throw new MiddlewareError("Invalid token.", 400);
   }
 
-  const jwksClient = jwks({ jwksUri: `https://${domain}/.well-known/jwks.json` });
+  const jwksClient = jwks({ jwksUri: jwksUrl(domain) });
   const signingKey = await jwksClient.getSigningKey();
   const signingSecret =
     (signingKey as CertSigningKey).publicKey ||

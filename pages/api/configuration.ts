@@ -4,6 +4,7 @@ import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
 } from "@/backend/configuration";
+import { graphQLUrl } from "@saleor/app-sdk/urls";
 import {
   FetchAppMetafieldsDocument,
   FetchAppMetafieldsQuery,
@@ -33,9 +34,8 @@ const handler: NextApiHandler = async (request, response) => {
     });
     return;
   }
-
   const client = createClient(
-    `https://${saleorDomain}/graphql/`,
+    graphQLUrl(saleorDomain),
     async () => await Promise.resolve({ token: getAuthToken() })
   );
 

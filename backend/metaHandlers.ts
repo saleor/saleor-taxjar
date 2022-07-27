@@ -19,10 +19,10 @@ export const prepareMetadataFromRequest = (
   input: ConfigurationPayload,
   currentChannelsConfigurations: ConfigurationPayload | null
 ): MetadataInput[] => {
-  return Object.entries(input).map(([channelID, configuration]) => {
+  return Object.entries(input).map(([channelSlug, configuration]) => {
     let currentConfiguration;
     if (currentChannelsConfigurations) {
-      currentConfiguration = currentChannelsConfigurations[channelID];
+      currentConfiguration = currentChannelsConfigurations[channelSlug];
     }
     if (
       currentConfiguration?.apiKey &&
@@ -32,7 +32,7 @@ export const prepareMetadataFromRequest = (
     }
     const encryptedConfiguration = encryptConfiguration(configuration);
 
-    return { key: channelID, value: JSON.stringify(encryptedConfiguration) };
+    return { key: channelSlug, value: JSON.stringify(encryptedConfiguration) };
   });
 };
 export const prepareResponseFromMetadata = (
@@ -44,8 +44,8 @@ export const prepareResponseFromMetadata = (
     return {};
   }
 
-  return channelsIds.reduce((config, channelId) => {
-    const item = input[channelId];
+  return channelsIds.reduce((config, channelSlug) => {
+    const item = input[channelSlug];
     const parsedConfiguration = item ? JSON.parse(item) : {};
     const {
       active,
@@ -59,7 +59,7 @@ export const prepareResponseFromMetadata = (
     } = decryptConfiguration(parsedConfiguration, obfuscateEncryptedData);
     return {
       ...config,
-      [channelId]: {
+      [channelSlug]: {
         active: active || false,
         apiKey: apiKey || "",
         sandbox: sandbox || true,
@@ -75,11 +75,12 @@ export const prepareResponseFromMetadata = (
 
 export const fetchChannelsSettings = async (
   saleorDomain: string,
-  channelIds: string[]
+  channelSlugs: string[]
 ) => {
   const saleorUrl = graphQLUrl(saleorDomain);
-  const client = createClient(saleorUrl, async () =>
-    Promise.resolve({ token: getAuthToken() })
+  const client = createClient(
+    saleorUrl,
+    async () => await Promise.resolve({ token: getAuthToken() })
   );
 
   const privateMetadata = (
@@ -87,15 +88,14 @@ export const fetchChannelsSettings = async (
       .query<FetchAppMetafieldsQuery, FetchAppMetafieldsQueryVariables>(
         FetchAppMetafieldsDocument,
         {
-          keys: channelIds,
+          keys: channelSlugs,
         }
       )
       .toPromise()
   ).data?.app?.privateMetafields;
-
   let data = null;
   if (privateMetadata) {
-    data = prepareResponseFromMetadata(privateMetadata, channelIds, false);
+    data = prepareResponseFromMetadata(privateMetadata, channelSlugs, false);
   }
   return data;
 };

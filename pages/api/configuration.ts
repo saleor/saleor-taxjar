@@ -1,10 +1,6 @@
 import { NextApiHandler } from "next";
 
 import {
-  prepareMetadataFromRequest,
-  prepareResponseFromMetadata,
-} from "@/backend/configuration";
-import {
   FetchAppMetafieldsDocument,
   FetchAppMetafieldsQuery,
   FetchAppMetafieldsQueryVariables,
@@ -17,6 +13,10 @@ import { createClient } from "../../lib/graphql";
 import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
 import MiddlewareError from "../../utils/MiddlewareError";
 
+import {
+  prepareMetadataFromRequest,
+  prepareResponseFromMetadata,
+} from "@/backend/metaHandlers";
 import { graphQLUrl } from "@saleor/app-sdk/urls";
 
 const handler: NextApiHandler = async (request, response) => {

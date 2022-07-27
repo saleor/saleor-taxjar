@@ -5,15 +5,12 @@ export const getTaxJarConfig = async (
   saleorDomain: string,
   channelSlug: string
 ) => {
-  // FIXME: this should be replaced by channel query,
-  // when we will add support for tax sync subscription this can be also replaced
-  const channelID = "Q2hhbm5lbDoy";
-  const settings = await fetchChannelsSettings(saleorDomain, [channelID]);
+  const settings = await fetchChannelsSettings(saleorDomain, [channelSlug]);
 
   let channelSettings = null;
   if (settings) {
     type ConfigurationPayloadKey = keyof typeof settings;
-    const channelKey = channelID as ConfigurationPayloadKey;
+    const channelKey = channelSlug as ConfigurationPayloadKey;
     channelSettings = settings[channelKey];
   }
 
@@ -21,7 +18,6 @@ export const getTaxJarConfig = async (
     return null;
   }
 
-  console.log(channelSettings);
   const taxJarConfig: TaxJarConfig = {
     shipFrom: {
       fromCountry: channelSettings?.shipFromCountry || "",

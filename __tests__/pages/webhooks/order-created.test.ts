@@ -1,5 +1,6 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
+import * as appConstants from "@/constants";
 import { PollyServer } from "@pollyjs/core";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
@@ -15,13 +16,7 @@ import {
 describe("api/webhooks/order-created", () => {
   const context = setupRecording();
   beforeAll(() => {
-    process.env.TAXJAR_FROM_COUNTRY = "PL";
-    process.env.TAXJAR_FROM_ZIP = "50-601";
-    process.env.TAXJAR_FROM_STATE = "";
-    process.env.TAXJAR_FROM_CITY = "Wroclaw";
-    process.env.TAXJAR_FROM_STREET = "Teczowa 7";
-    process.env.TAXJAR_SANDBOX = "true";
-    process.env.TAXJAR_API_KEY = "dummy";
+    appConstants.serverEnvVars.settingsEncryptionSecret = "";
   });
   beforeEach(() => {
     const server = context.polly.server;
@@ -150,7 +145,7 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "example.com",
+      domain: "localhost:8000",
     });
 
     const orderPayload = dummyOrderCreatedPayload;
@@ -175,7 +170,7 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "example.com",
+      domain: "localhost:8000",
     });
 
     const orderPayload = dummyOrderCreatedPayload;

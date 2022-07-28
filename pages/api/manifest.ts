@@ -1,6 +1,6 @@
+import { appName } from "@/constants";
 import { NextApiHandler } from "next";
 
-import { appName } from "@/constants";
 import { getBaseURL } from "../../lib/middlewares";
 import { version } from "../../package.json";
 

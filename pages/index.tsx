@@ -39,7 +39,10 @@ const Configuration: NextPage = () => {
 
   const channels = channelsQuery.data?.channels || [];
   const channelItems =
-    channels?.map((channel) => ({ id: channel.id, label: channel.name })) || [];
+    channels?.map((channel) => ({
+      id: channel.slug,
+      label: channel.name,
+    })) || [];
 
   useEffect(() => {
     if (!currentChannel && !!channels?.length) {
@@ -50,7 +53,7 @@ const Configuration: NextPage = () => {
   const [getConfiguration, getConfigurationFetch] = useFetch(
     () =>
       requestGetConfiguration({
-        channelId: currentChannel?.id || "",
+        channelSlug: currentChannel?.id || "",
       }),
     {
       skip: !appState?.ready || !currentChannel?.id,
@@ -60,7 +63,7 @@ const Configuration: NextPage = () => {
     (data) =>
       requestSetConfiguration(
         {
-          channelId: currentChannel?.id || "",
+          channelSlug: currentChannel?.id || "",
         },
         data
       ),

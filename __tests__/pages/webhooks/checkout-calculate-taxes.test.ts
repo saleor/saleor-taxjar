@@ -1,5 +1,4 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
-
 import { PollyServer } from "@pollyjs/core";
 import { ResponseTaxPayload } from "../../../backend/types";
 import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
@@ -10,22 +9,17 @@ import {
   mockRequest,
 } from "../../utils";
 
+import * as appConstants from "@/constants";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
 import * as calculateTaxes from "../../../pages/api/webhooks/checkout-calculate-taxes";
 
 describe("api/webhooks/checkout-calculate-taxes", () => {
-  beforeAll(() => {
-    process.env.TAXJAR_FROM_COUNTRY = "PL";
-    process.env.TAXJAR_FROM_ZIP = "50-601";
-    process.env.TAXJAR_FROM_STATE = "";
-    process.env.TAXJAR_FROM_CITY = "Wroclaw";
-    process.env.TAXJAR_FROM_STREET = "Teczowa 7";
-    process.env.TAXJAR_SANDBOX = "true";
-    process.env.TAXJAR_API_KEY = "dummy";
-  });
   const context = setupRecording();
+  beforeAll(() => {
+    appConstants.serverEnvVars.settingsEncryptionSecret = "";
+  });
   beforeEach(() => {
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);
@@ -153,7 +147,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "checkout_calculate_taxes",
-      domain: "example.com",
+      domain: "localhost:8000",
     });
 
     const checkoutPayload = dummyCheckoutPayload;
@@ -180,7 +174,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "checkout_calculate_taxes",
-      domain: "example.com",
+      domain: "localhost:8000",
     });
 
     const checkoutPayload = dummyCheckoutPayload;

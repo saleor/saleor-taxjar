@@ -27,9 +27,9 @@ export type ChannelConfigurationPayloadMetadata = {
 };
 
 export type ConfigurationPayload = {
-  [channelID in string]: ChannelConfigurationPayload;
+  [channelSlug in string]: ChannelConfigurationPayload;
 };
 
 export type ConfigurationMetadata = {
-  [channelID in string]: string;
+  [channelSlug in string]: string;
 };

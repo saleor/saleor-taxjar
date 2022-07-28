@@ -218,6 +218,10 @@ export const dummyOrderCreatedPayload = {
     id: "T3JkZXI6ZThkYWJjMDItYmM3Zi00ZWZjLWFlODgtYWJjMTUwMmE2Zjdm",
     userEmail: "test1@test.com",
     created: "2022-05-27T08:30:44.890527+00:00",
+    channel: {
+      id: "Q2hhbm5lbDoy",
+      slug: "channel-pln",
+    },
     shippingAddress: {
       id: "QWRkcmVzczo4Mw==",
       firstName: "Ann22a",

@@ -1,3 +1,4 @@
+import { SALEOR_DOMAIN_HEADER } from "@/constants";
 import { NextApiHandler } from "next";
 import { calculateOrderTaxes } from "../../../backend/taxHandlers";
 import { OrderPayload } from "../../../backend/types";
@@ -21,15 +22,24 @@ const handler: NextApiHandler = async (request, response) => {
       .json({ success: false, message: error.message });
     return;
   }
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
   const body: OrderPayload[] =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const orderPayload: OrderPayload = body[0];
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based
-  // on channnel used in order.
-  const taxJarConfig = getTaxJarConfig();
+  const taxJarConfig = await getTaxJarConfig(
+    saleorDomain as string,
+    orderPayload.channel.slug
+  );
+  if (!taxJarConfig) {
+    response
+      .status(404)
+      .json({ success: false, message: "TaxJar is not configured." });
+    console.log("TaxJar is not configured.");
+    return;
+  }
   const calculatedTaxes = await calculateOrderTaxes(orderPayload, taxJarConfig);
   response.json(calculatedTaxes.data);
 };

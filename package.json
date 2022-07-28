@@ -24,6 +24,8 @@
     "fast-glob": "^3.2.11",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
+    "isomorphic-unfetch": "^3.1.0",
+    "json-easy-strip": "^1.0.6",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.1.2",
     "next": "12.1.6",

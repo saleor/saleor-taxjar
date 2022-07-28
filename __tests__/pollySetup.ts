@@ -1,8 +1,19 @@
+import { ChannelConfigurationPayloadMetadata } from "@/types/api";
 import { PollyConfig, PollyServer } from "@pollyjs/core";
 import path from "path";
 import { setupPolly } from "setup-polly-jest";
 
-const HEADERS_BLACKLIST = new Set(["authorization", "set-cookie"]);
+const HEADERS_BLACKLIST = new Set([
+  "authorization",
+  "set-cookie",
+  "authorization-bearer",
+]);
+const PROTECTED_FIELDS = [
+  {
+    field: "apiKey",
+    replaceValue: "U2FsdGVkX1+vwewxrCWG98Hnr8Qx/MXEZfUmS6IQEIM=",
+  },
+];
 
 export const setupPollyMiddleware = (server: PollyServer) => {
   // Hide sensitive data in headers or in body
@@ -18,6 +29,31 @@ export const setupPollyMiddleware = (server: PollyServer) => {
     recording.request.headers = requestHeaders;
     recording.response.cookies = [];
     recording.response.headers = responseHeaders;
+
+    if (recording.request.postData.text.includes("FetchAppMetafields")) {
+      const responseData = JSON.parse(recording.response.content.text);
+      const privateMetadata = responseData.data.app.privateMetafields;
+
+      for (const [key, configuration] of Object.entries(
+        responseData.data.app.privateMetafields
+      )) {
+        const parsedConfiguration: ChannelConfigurationPayloadMetadata =
+          JSON.parse(configuration as unknown as string);
+        PROTECTED_FIELDS.forEach(function (protectedField) {
+          parsedConfiguration.apiKey.value;
+          if (protectedField.field in parsedConfiguration) {
+            parsedConfiguration[
+              protectedField.field as keyof typeof parsedConfiguration
+            ].value = protectedField.replaceValue;
+          }
+        });
+        privateMetadata[key] = JSON.stringify(parsedConfiguration);
+      }
+      responseData.data.app.privateMetafields = privateMetadata;
+      recording.response.content.text = JSON.stringify(responseData);
+      recording.response.content.size = recording.response.content.text.length;
+      recording.response.bodySize = recording.response.content.text.length;
+    }
   });
 };
 

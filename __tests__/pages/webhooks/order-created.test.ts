@@ -2,6 +2,7 @@
 
 import * as appConstants from "@/constants";
 import { PollyServer } from "@pollyjs/core";
+import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
@@ -13,12 +14,21 @@ import {
   mockRequest,
 } from "../../utils";
 
+jest.mock("next/dist/compiled/raw-body/index.js", () => ({
+  __esModule: true,
+  default: jest.fn((_) => ({
+    toString: () => '{"dummy":12}',
+  })),
+}));
+
+const testDomain = "localhost:8000";
 describe("api/webhooks/order-created", () => {
   const context = setupRecording();
   beforeAll(() => {
     appConstants.serverEnvVars.settingsEncryptionSecret = "";
   });
   beforeEach(() => {
+    process.env.SALEOR_DOMAIN = testDomain;
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);
   });
@@ -64,7 +74,7 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event,
-      domain: "example.com",
+      domain: testDomain,
     });
 
     const orderPayload = dummyOrderCreatedPayload;
@@ -93,12 +103,13 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "example.com",
+      domain: testDomain,
       signature,
     });
 
-    const orderPayload = dummyOrderCreatedPayload;
-    req.body = orderPayload;
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await orderCreated.default(
       req as unknown as NextApiRequest,
@@ -111,7 +122,7 @@ describe("api/webhooks/order-created", () => {
     mockTaxJarRequest.mockRestore();
   });
 
-  it.skip("rejects when saleor signature is incorrect", async () => {
+  it("rejects when saleor signature is incorrect", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyTaxesResponseForCreatedOrder,
     }));
@@ -119,16 +130,24 @@ describe("api/webhooks/order-created", () => {
       .spyOn(taxJarRequest, "default")
       .mockImplementation((_) => ({ post: post } as unknown as Request));
 
+    const orderPayload = dummyOrderCreatedPayload;
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify(orderPayload),
+    });
+
     const signature = "incorrect-sig";
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "example.com",
+      domain: testDomain,
       signature,
     });
 
-    const orderPayload = dummyOrderCreatedPayload;
-    req.body = orderPayload;
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await orderCreated.default(
       req as unknown as NextApiRequest,
@@ -145,11 +164,30 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "localhost:8000",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
     });
 
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockReturnValue(
+        Promise.resolve(
+          {} as unknown as joseModule.FlattenedVerifyResult &
+            joseModule.ResolvedKey
+        )
+      );
+
     const orderPayload = dummyOrderCreatedPayload;
-    req.body = orderPayload;
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify(orderPayload),
+    });
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await orderCreated.default(
       req as unknown as NextApiRequest,
@@ -157,6 +195,8 @@ describe("api/webhooks/order-created", () => {
     );
 
     expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
   });
 
   it("skips when order has different address than US", async () => {
@@ -170,13 +210,32 @@ describe("api/webhooks/order-created", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_created",
-      domain: "localhost:8000",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
     });
+
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockReturnValue(
+        Promise.resolve(
+          {} as unknown as joseModule.FlattenedVerifyResult &
+            joseModule.ResolvedKey
+        )
+      );
 
     const orderPayload = dummyOrderCreatedPayload;
 
     orderPayload.order.shippingAddress.country.code = "PL";
-    req.body = orderPayload;
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify(orderPayload),
+    });
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await orderCreated.default(
       req as unknown as NextApiRequest,
@@ -187,5 +246,7 @@ describe("api/webhooks/order-created", () => {
     expect(res.statusCode).toBe(200);
 
     mockTaxJarRequest.mockRestore();
+
+    mockJose.mockRestore();
   });
 });

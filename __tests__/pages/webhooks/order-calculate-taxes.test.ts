@@ -1,6 +1,7 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 import * as appConstants from "@/constants";
 import { PollyServer } from "@pollyjs/core";
+import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
@@ -13,12 +14,22 @@ import {
   mockRequest,
 } from "../../utils";
 
+jest.mock("next/dist/compiled/raw-body/index.js", () => ({
+  __esModule: true,
+  default: jest.fn((_) => ({
+    toString: () => '{"dummy":12}',
+  })),
+}));
+
+const testDomain = "localhost:8000";
+
 describe("api/webhooks/order-calculate-taxes", () => {
   const context = setupRecording();
   beforeAll(() => {
     appConstants.serverEnvVars.settingsEncryptionSecret = "";
   });
   beforeEach(() => {
+    process.env.SALEOR_DOMAIN = testDomain;
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);
   });
@@ -64,7 +75,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event,
-      domain: "example.com",
+      domain: testDomain,
     });
 
     const orderPayload = dummyOrderPayload;
@@ -93,12 +104,13 @@ describe("api/webhooks/order-calculate-taxes", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_calculate_taxes",
-      domain: "example.com",
+      domain: testDomain,
       signature,
     });
 
-    const orderPayload = dummyOrderPayload;
-    req.body = [orderPayload];
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await calculateTaxes.default(
       req as unknown as NextApiRequest,
@@ -111,7 +123,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
     mockTaxJarRequest.mockRestore();
   });
 
-  it.skip("rejects when saleor signature is incorrect", async () => {
+  it("rejects when saleor signature is incorrect", async () => {
     const post = jest.fn((url: any, params: any) => ({
       dummyFetchTaxesResponse,
     }));
@@ -119,16 +131,24 @@ describe("api/webhooks/order-calculate-taxes", () => {
       .spyOn(taxJarRequest, "default")
       .mockImplementation((_) => ({ post: post } as unknown as Request));
 
+    const orderPayload = dummyOrderPayload;
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([orderPayload]),
+    });
+
     const signature = "incorrect-sig";
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_calculate_taxes",
-      domain: "example.com",
+      domain: testDomain,
       signature,
     });
 
-    const orderPayload = dummyOrderPayload;
-    req.body = [orderPayload];
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await calculateTaxes.default(
       req as unknown as NextApiRequest,
@@ -145,18 +165,37 @@ describe("api/webhooks/order-calculate-taxes", () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_calculate_taxes",
-      domain: "localhost:8000",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
     });
 
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockReturnValue(
+        Promise.resolve(
+          {} as unknown as joseModule.FlattenedVerifyResult &
+            joseModule.ResolvedKey
+        )
+      );
+
     const orderPayload = dummyOrderPayload;
-    req.body = [orderPayload];
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([orderPayload]),
+    });
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await calculateTaxes.default(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
 
-    const data: ResponseTaxPayload = res._getJSONData();
+    const data: ResponseTaxPayload = res._getData();
 
     expect(data.shipping_price_gross_amount).toBe("12.3");
     expect(data.shipping_price_net_amount).toBe("10");
@@ -166,28 +205,48 @@ describe("api/webhooks/order-calculate-taxes", () => {
     expect(data.lines[0].total_net_amount).toBe("28.00");
     expect(data.lines[0].tax_rate).toBe("0.23");
     expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
   });
 
   it("propagates discounts over lines", async () => {
     const { req, res } = mockRequest({
       method: "POST",
       event: "order_calculate_taxes",
-      domain: "localhost:8000",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
     });
+
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockReturnValue(
+        Promise.resolve(
+          {} as unknown as joseModule.FlattenedVerifyResult &
+            joseModule.ResolvedKey
+        )
+      );
 
     const orderPayload = dummyOrderPayload;
     orderPayload.discounts = [{ amount: "2" }, { amount: "1" }];
     const linePayload = orderPayload.lines[0];
     orderPayload.lines = [linePayload, linePayload];
 
-    req.body = [orderPayload];
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([orderPayload]),
+    });
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
 
     await calculateTaxes.default(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
 
-    const data: ResponseTaxPayload = res._getJSONData();
+    const data: ResponseTaxPayload = res._getData();
 
     // amounts already include propagated discount
     expect(data.lines[0].total_gross_amount).toBe("32.60");
@@ -198,5 +257,7 @@ describe("api/webhooks/order-calculate-taxes", () => {
     expect(data.lines[1].total_net_amount).toBe("26.50");
     expect(data.lines[1].tax_rate).toBe("0.23");
     expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
   });
 });

@@ -1,8 +1,5 @@
 export const appName = "Saleor TaxJar";
 
-export const SALEOR_DOMAIN_HEADER = "saleor-domain";
-export const SALEOR_EVENT_HEADER = "saleor-event";
-
 export const isSsr = typeof window === "undefined";
 
 export type EnvVar = "appDomain" | "appUrl";

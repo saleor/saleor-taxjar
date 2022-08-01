@@ -30,7 +30,7 @@ export const setupPollyMiddleware = (server: PollyServer) => {
     recording.response.cookies = [];
     recording.response.headers = responseHeaders;
 
-    if (recording.request.postData.text.includes("FetchAppMetafields")) {
+    if (recording.request.postData?.text.includes("FetchAppMetafields")) {
       const responseData = JSON.parse(recording.response.content.text);
       const privateMetadata = responseData.data.app.privateMetafields;
 

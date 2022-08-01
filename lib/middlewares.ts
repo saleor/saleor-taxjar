@@ -1,54 +1,52 @@
-import { NextApiRequest } from "next";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
+import { withSaleorDomainPresent } from "@saleor/app-sdk/middleware";
+import { jwksUrl } from "@saleor/app-sdk/urls";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import jwks, { CertSigningKey, RsaSigningKey } from "jwks-rsa";
-
-import * as Constants from "../constants";
+import { NextApiRequest } from "next";
+import type { Middleware } from "retes";
+import { Response } from "retes/response";
 import MiddlewareError from "../utils/MiddlewareError";
-import { jwksUrl } from "@saleor/app-sdk/urls";
 
 export const getBaseURL = (req: NextApiRequest): string => {
   const { host, "x-forwarded-proto": protocol = "http" } = req.headers;
   return `${protocol}://${host}`;
 };
 
+export const withSaleorDomainMatch: Middleware = (handler) =>
+  withSaleorDomainPresent((request) => {
+    const SALEOR_DOMAIN = process.env.SALEOR_DOMAIN;
+
+    if (SALEOR_DOMAIN === undefined) {
+      console.log("Missing SALEOR_DOMAIN environment variable.");
+      return Response.InternalServerError({
+        success: false,
+        message: "Missing SALEOR_DOMAIN environment variable.",
+      });
+    }
+
+    if (SALEOR_DOMAIN !== request.headers[SALEOR_DOMAIN_HEADER]) {
+      console.log(`Invalid ${SALEOR_DOMAIN_HEADER} header.`);
+      return Response.BadRequest({
+        success: false,
+        message: `Invalid ${SALEOR_DOMAIN_HEADER} header.`,
+      });
+    }
+
+    return handler(request);
+  });
+
 export const domainMiddleware = (request: NextApiRequest) => {
-  const saleorDomain = request.headers[Constants.SALEOR_DOMAIN_HEADER];
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
   if (!saleorDomain) {
     throw new MiddlewareError("Missing saleor domain token.", 400);
   }
   return saleorDomain;
 };
 
-export const eventMiddleware = (
-  request: NextApiRequest,
-  expectedEvent: string
-) => {
-  const receivedEvent =
-    request.headers[Constants.SALEOR_EVENT_HEADER]?.toString();
-  if (receivedEvent !== expectedEvent) {
-    throw new MiddlewareError("Invalid event.", 400);
-  }
-};
-export const requestType = (request: NextApiRequest) => {
-  if (request.method !== "POST") {
-    throw new MiddlewareError("Only POST requests allowed", 405);
-  }
-};
-
-export const webhookMiddleware = (
-  request: NextApiRequest,
-  expectedEvent: string
-) => {
-  requestType(request);
-  domainMiddleware(request);
-  eventMiddleware(request, expectedEvent);
-};
-
 export const jwtVerifyMiddleware = async (request: NextApiRequest) => {
-  const {
-    [Constants.SALEOR_DOMAIN_HEADER]: domain,
-    "authorization-bearer": token,
-  } = request.headers;
+  const { [SALEOR_DOMAIN_HEADER]: domain, "authorization-bearer": token } =
+    request.headers;
 
   let tokenClaims;
   try {

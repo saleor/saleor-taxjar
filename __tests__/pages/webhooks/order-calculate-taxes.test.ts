@@ -1,5 +1,4 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
-import * as appConstants from "@/constants";
 import { PollyServer } from "@pollyjs/core";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
@@ -15,9 +14,6 @@ import {
 
 describe("api/webhooks/order-calculate-taxes", () => {
   const context = setupRecording();
-  beforeAll(() => {
-    appConstants.serverEnvVars.settingsEncryptionSecret = "";
-  });
   beforeEach(() => {
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);

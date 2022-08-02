@@ -9,7 +9,6 @@ import {
   mockRequest,
 } from "../../utils";
 
-import * as appConstants from "@/constants";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
@@ -17,9 +16,6 @@ import * as calculateTaxes from "../../../pages/api/webhooks/checkout-calculate-
 
 describe("api/webhooks/checkout-calculate-taxes", () => {
   const context = setupRecording();
-  beforeAll(() => {
-    appConstants.serverEnvVars.settingsEncryptionSecret = "";
-  });
   beforeEach(() => {
     const server = context.polly.server;
     setupPollyMiddleware(server as unknown as PollyServer);

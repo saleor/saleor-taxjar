@@ -1,5 +1,11 @@
-import { ChannelConfigurationPayloadMetadata } from "@/types/api";
+import {
+  ChannelConfigurationPayload,
+  ChannelConfigurationPayloadMetadata,
+  ConfigurationPayload,
+  MetedataField,
+} from "@/types/api";
 import { PollyConfig, PollyServer } from "@pollyjs/core";
+import { reduce } from "lodash";
 import path from "path";
 import { setupPolly } from "setup-polly-jest";
 
@@ -14,6 +20,13 @@ const PROTECTED_FIELDS = [
     replaceValue: "U2FsdGVkX1+vwewxrCWG98Hnr8Qx/MXEZfUmS6IQEIM=",
   },
 ];
+const tryParse = (data: string | undefined) => {
+  try {
+    return JSON.parse(data as string);
+  } catch (e) {
+    return undefined;
+  }
+};
 
 export const setupPollyMiddleware = (server: PollyServer) => {
   // Hide sensitive data in headers or in body
@@ -30,25 +43,48 @@ export const setupPollyMiddleware = (server: PollyServer) => {
     recording.response.cookies = [];
     recording.response.headers = responseHeaders;
 
-    if (recording.request.postData.text.includes("FetchAppMetafields")) {
-      const responseData = JSON.parse(recording.response.content.text);
-      const privateMetadata = responseData.data.app.privateMetafields;
-
-      for (const [key, configuration] of Object.entries(
-        responseData.data.app.privateMetafields
-      )) {
-        const parsedConfiguration: ChannelConfigurationPayloadMetadata =
-          JSON.parse(configuration as unknown as string);
-        PROTECTED_FIELDS.forEach(function (protectedField) {
-          parsedConfiguration.apiKey.value;
-          if (protectedField.field in parsedConfiguration) {
-            parsedConfiguration[
-              protectedField.field as keyof typeof parsedConfiguration
-            ].value = protectedField.replaceValue;
-          }
-        });
-        privateMetadata[key] = JSON.stringify(parsedConfiguration);
-      }
+    const responseData = tryParse(recording.response.content?.text);
+    if (
+      recording.request.postData.text.includes("FetchAppMetafields") &&
+      responseData
+    ) {
+      const privateMetadata: ConfigurationPayload = reduce(
+        responseData.data.app.privateMetafields,
+        (filteredChannelsConfiguration, jsonData, channelSlug) => {
+          const parsedConfiguration = JSON.parse(jsonData);
+          const filteredConfiguration: ChannelConfigurationPayloadMetadata =
+            reduce(
+              parsedConfiguration,
+              (
+                resultConfig: ChannelConfigurationPayloadMetadata,
+                configValue: MetedataField<ChannelConfigurationPayload>,
+                configName: string
+              ) => {
+                PROTECTED_FIELDS.find((elem) => elem.field === configName);
+                const protectedField = PROTECTED_FIELDS.find(
+                  (elem) => elem.field === configName
+                );
+                if (protectedField) {
+                  (configValue.value as unknown as string) =
+                    protectedField.replaceValue;
+                }
+                return {
+                  ...resultConfig,
+                  [configName as keyof ChannelConfigurationPayloadMetadata]:
+                    configValue,
+                };
+              },
+              {} as ChannelConfigurationPayloadMetadata
+            );
+          return {
+            ...filteredChannelsConfiguration,
+            [channelSlug as keyof ConfigurationPayload]: JSON.stringify(
+              filteredConfiguration
+            ),
+          };
+        },
+        {}
+      );
       responseData.data.app.privateMetafields = privateMetadata;
       recording.response.content.text = JSON.stringify(responseData);
       recording.response.content.size = recording.response.content.text.length;

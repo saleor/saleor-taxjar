@@ -34,7 +34,7 @@
     "react-dom": "18.1.0",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.31.3",
-    "retes": "^0.30.1",
+    "retes": "^0.31.1",
     "taxjar": "^4.0.1",
     "urql": "^2.2.0"
   },

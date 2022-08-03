@@ -54,7 +54,7 @@ specifiers:
   react-dom: 18.1.0
   react-helmet: ^6.1.0
   react-hook-form: ^7.31.3
-  retes: ^0.30.1
+  retes: ^0.31.1
   setup-polly-jest: ^0.11.0
   tailwindcss: ^3.0.24
   taxjar: ^4.0.1
@@ -86,7 +86,7 @@ dependencies:
   react-dom: 18.1.0_react@18.1.0
   react-helmet: 6.1.0_react@18.1.0
   react-hook-form: 7.33.1_react@18.1.0
-  retes: 0.30.1
+  retes: 0.31.1
   taxjar: 4.0.1
   urql: 2.2.0_7oyq4t3ocdziwagw7zfqg4youi
 
@@ -7277,8 +7277,8 @@ packages:
       busboy: 1.6.0
     dev: false
 
-  /retes/0.30.1:
-    resolution: {integrity: sha512-+zXCyrOT22WjM9ayT3riudhmFDJVTeGshfgKWSuyOPV+ez2R6Fi2OtM1hfGteGZrAv/gATEMgdiCPdJOaDvIEw==}
+  /retes/0.31.1:
+    resolution: {integrity: sha512-lmeGyK/LzDVqqlkP6W3dids/fatT2niY3eBls3+wn1ArOKdyv17Kmmvt6TTrV1g6MTV6Z/ZxCbxAXtBAMRVMFw==}
     dependencies:
       busboy: 1.6.0
     dev: false

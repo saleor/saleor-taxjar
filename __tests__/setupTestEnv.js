@@ -1,0 +1,1 @@
+process.env.SETTINGS_ENCRYPTION_SECRET = "";

@@ -1,5 +1,5 @@
 import fs from "fs";
-import "isomorphic-unfetch";
+import invariant from "ts-invariant";
 
 const maskToken = (token: string) =>
   "*".repeat(Math.max(token.length - 4, 0)) + token.slice(-4);
@@ -20,6 +20,10 @@ export const setAuthToken = async (token: string) => {
   console.log("Setting authToken: ", maskToken(token));
 
   if (process.env.VERCEL === "1") {
+    invariant(
+      process.env.SALEOR_MARKETPLACE_REGISTER_URL,
+      "Env var SALEOR_MARKETPLACE_REGISTER_URL is not configured."
+    );
     await fetch(process.env.SALEOR_MARKETPLACE_REGISTER_URL as string, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

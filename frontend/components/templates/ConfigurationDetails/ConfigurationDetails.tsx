@@ -87,7 +87,7 @@ const ConfigurationDetails: React.FC<ConfigurationDetailsProps> = ({
   return (
     <form>
       <AppLayout
-        title={"Configuration"}
+        title="Configuration"
         items={channels}
         selectedItem={currentChannel}
         loading={loading.sidebar}

@@ -11,9 +11,6 @@ export default {
   coveragePathIgnorePatterns: ["/node_modules/", "__tests__/"],
   coverageProvider: "v8",
   modulePathIgnorePatterns: ["utils.ts"],
-  transform: {
-    "^.+\\.ts?$": "ts-jest",
-  },
   moduleNameMapper: {
     ...pathsToModuleNameMapper(compilerOptions.paths, {
       prefix: "<rootDir>/",
@@ -21,6 +18,8 @@ export default {
     "^lodash-es/(.*)$": "lodash/$1",
   },
   transformIgnorePatterns: ["<rootDir>/node_modules/"],
+  setupFiles: ["<rootDir>/__tests__/setupTestEnv"],
+  setupFilesAfterEnv: ["<rootDir>/__tests__/setupTestsAfterEnv"],
   testMatch: [
     // "**/__tests__/**/*.[jt]s?(x)",
     "**/?(*.)+(spec|test).[tj]s?(x)",

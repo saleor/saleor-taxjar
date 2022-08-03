@@ -8,7 +8,12 @@ import { getAuthToken } from "../lib/environment";
 import { createClient } from "../lib/graphql";
 
 import { MetadataInput } from "@/generated/graphql";
-import { ConfigurationMetadata, ConfigurationPayload } from "@/types/api";
+import {
+  ChannelConfigurationPayload,
+  ConfigurationMetadata,
+  ConfigurationPayload,
+} from "@/types/api";
+import { reduce } from "lodash";
 import {
   decryptConfiguration,
   encryptConfiguration,
@@ -20,18 +25,27 @@ export const prepareMetadataFromRequest = (
   currentChannelsConfigurations: ConfigurationPayload | null
 ): MetadataInput[] => {
   return Object.entries(input).map(([channelSlug, configuration]) => {
-    let currentConfiguration;
-    if (currentChannelsConfigurations) {
-      currentConfiguration = currentChannelsConfigurations[channelSlug];
-    }
-    if (
-      currentConfiguration?.apiKey &&
-      configuration.apiKey.startsWith(PLACEHOLDER)
-    ) {
-      configuration.apiKey = currentConfiguration.apiKey;
-    }
-    const encryptedConfiguration = encryptConfiguration(configuration);
-
+    const encryptedConfiguration = encryptConfiguration(
+      reduce(
+        configuration,
+        (result, value, key) => {
+          const currentConfiguration =
+            currentChannelsConfigurations?.[channelSlug];
+          if (
+            currentConfiguration?.apiKey &&
+            configuration.apiKey.startsWith(PLACEHOLDER) &&
+            key === "apiKey"
+          ) {
+            value = currentConfiguration.apiKey;
+          }
+          return {
+            ...result,
+            [key as keyof ChannelConfigurationPayload]: value,
+          };
+        },
+        {} as ChannelConfigurationPayload
+      )
+    );
     return { key: channelSlug, value: JSON.stringify(encryptedConfiguration) };
   });
 };
@@ -93,9 +107,7 @@ export const fetchChannelsSettings = async (
       )
       .toPromise()
   ).data?.app?.privateMetafields;
-  let data = null;
-  if (privateMetadata) {
-    data = prepareResponseFromMetadata(privateMetadata, channelSlugs, false);
-  }
-  return data;
+  return privateMetadata
+    ? prepareResponseFromMetadata(privateMetadata, channelSlugs, false)
+    : null;
 };

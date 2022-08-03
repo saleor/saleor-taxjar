@@ -7,12 +7,9 @@ export const getTaxJarConfig = async (
 ) => {
   const settings = await fetchChannelsSettings(saleorDomain, [channelSlug]);
 
-  let channelSettings = null;
-  if (settings) {
-    type ConfigurationPayloadKey = keyof typeof settings;
-    const channelKey = channelSlug as ConfigurationPayloadKey;
-    channelSettings = settings[channelKey];
-  }
+  type ConfigurationPayloadKey = keyof typeof settings;
+  const channelKey = channelSlug as ConfigurationPayloadKey;
+  const channelSettings = settings?.[channelKey];
 
   if (!channelSettings?.apiKey) {
     return null;

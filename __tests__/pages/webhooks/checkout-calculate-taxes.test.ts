@@ -9,7 +9,6 @@ import {
   mockRequest,
 } from "../../utils";
 
-import * as appConstants from "@/constants";
 import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
@@ -26,9 +25,6 @@ jest.mock("next/dist/compiled/raw-body/index.js", () => ({
 const testDomain = "localhost:8000";
 describe("api/webhooks/checkout-calculate-taxes", () => {
   const context = setupRecording();
-  beforeAll(() => {
-    appConstants.serverEnvVars.settingsEncryptionSecret = "";
-  });
   beforeEach(() => {
     process.env.SALEOR_DOMAIN = testDomain;
     const server = context.polly.server;

@@ -67,22 +67,30 @@ const calculateTaxes = async (
   taxData: FetchTaxesPayload,
   taxJarConfig: TaxJarConfig
 ): Promise<{ data: ResponseTaxPayload }> => {
-  const taxResposne = await fetchTaxes(taxData, taxJarConfig);
+  const linesWithChargeTaxes = taxData.lines.filter(
+    (line) => line.chargeTaxes === true
+  );
+  const taxDataWithChargeTaxes = {
+    ...taxData,
+    lines: linesWithChargeTaxes,
+  };
+  const taxResposne =
+    linesWithChargeTaxes.length !== 0
+      ? await fetchTaxes(taxDataWithChargeTaxes, taxJarConfig)
+      : undefined;
 
-  const taxDetails = taxResposne.tax.breakdown;
+  const taxDetails = taxResposne?.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
 
-  let shippingPriceGross = taxData.shipping_amount;
-  let shippingPriceNet = taxData.shipping_amount;
-  let shippingTaxRate = "0";
-
-  if (shippingDetails) {
-    shippingPriceGross = String(
-      shippingDetails.taxable_amount + shippingDetails.tax_collectable
-    );
-    shippingPriceNet = String(shippingDetails.taxable_amount);
-    shippingTaxRate = String(shippingDetails.combined_tax_rate);
-  }
+  const shippingPriceGross = shippingDetails
+    ? String(shippingDetails.taxable_amount + shippingDetails.tax_collectable)
+    : taxData.shipping_amount;
+  const shippingPriceNet = shippingDetails
+    ? String(shippingDetails.taxable_amount)
+    : taxData.shipping_amount;
+  const shippingTaxRate = shippingDetails
+    ? String(shippingDetails.combined_tax_rate)
+    : "0";
 
   return {
     data: {
@@ -90,19 +98,16 @@ const calculateTaxes = async (
       shipping_price_net_amount: shippingPriceNet,
       shipping_tax_rate: shippingTaxRate,
       // lines order needs to be the same as for recieved payload.
+      // lines that have chargeTaxes === false will have returned default value
       lines: taxData.lines.map((line) => {
-        let totalGrossAmount = line.totalAmount - line.discount;
-        let totalNetAmount = line.totalAmount - line.discount;
-        let taxRate = "0";
-
-        if (taxDetails?.line_items) {
-          const lineTax = taxDetails.line_items.find((l) => l.id === line.id);
-          if (lineTax) {
-            totalGrossAmount = lineTax.taxable_amount + lineTax.tax_collectable;
-            totalNetAmount = lineTax.taxable_amount;
-            taxRate = String(lineTax.combined_tax_rate);
-          }
-        }
+        const lineTax = taxDetails?.line_items?.find((l) => l.id === line.id);
+        const totalGrossAmount = lineTax
+          ? lineTax.taxable_amount + lineTax.tax_collectable
+          : line.totalAmount - line.discount;
+        const totalNetAmount = lineTax
+          ? lineTax.taxable_amount
+          : line.totalAmount - line.discount;
+        const taxRate = lineTax ? String(lineTax.combined_tax_rate) : "0";
         return {
           total_gross_amount: totalGrossAmount.toFixed(2),
           total_net_amount: totalNetAmount.toFixed(2),

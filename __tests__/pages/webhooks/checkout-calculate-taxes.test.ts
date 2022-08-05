@@ -13,7 +13,7 @@ import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
-import * as calculateTaxes from "../../../pages/api/webhooks/checkout-calculate-taxes";
+import toNextHandler from "../../../pages/api/webhooks/checkout-calculate-taxes";
 
 jest.mock("next/dist/compiled/raw-body/index.js", () => ({
   __esModule: true,
@@ -49,7 +49,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = { ...dummyFetchTaxesPayload };
     req.body = [checkoutPayload];
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -78,7 +78,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     const checkoutPayload = { ...dummyFetchTaxesPayload };
     req.body = [checkoutPayload];
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -109,7 +109,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -147,7 +147,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -169,11 +169,9 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
 
     const checkoutPayload = { ...dummyCheckoutPayload };
@@ -188,7 +186,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       toString: () => JSON.stringify([checkoutPayload]),
     });
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -218,11 +216,9 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
     const checkoutPayload = { ...dummyCheckoutPayload };
 
@@ -240,7 +236,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -271,11 +267,9 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
     const checkoutPayload = { ...dummyCheckoutPayload };
 
@@ -298,7 +292,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -329,11 +323,9 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
     const checkoutPayload = { ...dummyCheckoutPayload };
 
@@ -357,7 +349,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -389,11 +381,9 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
     const checkoutPayload = { ...dummyCheckoutPayload };
 
@@ -417,7 +407,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );

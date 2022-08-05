@@ -71,6 +71,7 @@ export const prepareResponseFromMetadata = (
       shipFromStreet,
       shipFromZip,
     } = decryptConfiguration(parsedConfiguration, obfuscateEncryptedData);
+
     return {
       ...config,
       [channelSlug]: {
@@ -110,4 +111,28 @@ export const fetchChannelsSettings = async (
   return privateMetadata
     ? prepareResponseFromMetadata(privateMetadata, channelSlugs, false)
     : null;
+};
+
+export const validateConfigurationBeforeSave = (
+  channelsConfiguration: ConfigurationPayload
+) => {
+  const activeWithoutApiKeys = Object.entries(channelsConfiguration)
+    .filter(
+      ([_, configuration]) =>
+        configuration.active &&
+        (!configuration.apiKey || configuration.apiKey === PLACEHOLDER)
+    )
+    .map(([channelSlug, _]) => channelSlug);
+  if (activeWithoutApiKeys.length !== 0) {
+    console.log(
+      "TaxJar cannot be active for the channel as API key is missing."
+    );
+    return {
+      message: `TaxJar App cannot be active for channel: ${activeWithoutApiKeys.toString()}. The API Key is missing.`,
+      isValid: false,
+    };
+  }
+  return {
+    isValid: true,
+  };
 };

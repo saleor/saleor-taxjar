@@ -1,6 +1,6 @@
 import { calculateCheckoutTaxes } from "@/backend/taxHandlers";
 import { CheckoutPayload } from "@/backend/types";
-import { getTaxJarConfig } from "@/backend/utils";
+import { getTaxJarConfig, taxJarConfigIsValidToUse } from "@/backend/utils";
 import { withSaleorDomainMatch } from "@/lib/middlewares";
 import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
 import {
@@ -17,18 +17,16 @@ const handler: Handler = async (request) => {
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const checkoutPayload: CheckoutPayload = body[0];
-
   const taxJarConfig = await getTaxJarConfig(
     saleorDomain as string,
     checkoutPayload.channel.slug
   );
-  if (!taxJarConfig) {
-    console.log("TaxJar is not configured.");
-    return Response.BadRequest({
-      success: false,
-      message: "TaxJar is not configured.",
-    });
+  const validData = taxJarConfigIsValidToUse(taxJarConfig);
+
+  if (!validData.isValid) {
+    return { body: validData.message, status: validData.status };
   }
+
   const calculatedTaxes = await calculateCheckoutTaxes(
     checkoutPayload,
     taxJarConfig

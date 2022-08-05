@@ -9,7 +9,10 @@ import { toNextHandler } from "retes/adapter";
 import { Response } from "retes/response";
 import { calculateOrderTaxes } from "../../../backend/taxHandlers";
 import { OrderPayload } from "../../../backend/types";
-import { getTaxJarConfig } from "../../../backend/utils";
+import {
+  getTaxJarConfig,
+  taxJarConfigIsValidToUse,
+} from "../../../backend/utils";
 
 const handler: Handler = async (request) => {
   const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
@@ -23,12 +26,10 @@ const handler: Handler = async (request) => {
     saleorDomain as string,
     orderPayload.channel.slug
   );
-  if (!taxJarConfig) {
-    console.log("TaxJar is not configured.");
-    return Response.BadRequest({
-      success: false,
-      message: "TaxJar is not configured.",
-    });
+  const validData = taxJarConfigIsValidToUse(taxJarConfig);
+
+  if (!validData.isValid) {
+    return { body: validData.message, status: validData.status };
   }
   const calculatedTaxes = await calculateOrderTaxes(orderPayload, taxJarConfig);
   return Response.OK(calculatedTaxes.data);

@@ -1,63 +1,75 @@
-# Saleor App Template
+# Saleor TaxJar App
 
-Bare-bones boilerplate for writing Saleor Apps with Next.js.
+The sales tax calculation with using TaxJar API.
 
-### What's Saleor App in a nutshell 
-Saleor App is the fastest way of extending Saleor with custom logic using asynchronous and synchronous webhooks (and vast Saleor's API). In most cases, creating an App consists of two tasks:
-* Writing webhook's code realizing your custom login
-* Developing configuration UI that can be exposed to Saleor Dashboard via specialized view (designated in App's manifest).
-
-### Why Next.js
-You can use any preferred technology to create Saleor Apps, but Next.js is among the most efficient for two reasons. The first is the simplicity of maintaining your API endpoints/webhooks and your apps' configuration React front-end in a single, well-organized project. The second reason is the ease and quality of local development and deployment.
-
-### Learn more about Apps
-
-[Apps guide](https://docs.saleor.io/docs/3.x/developer/extending/apps/key-concepts)
-
-[Configuring apps in dashboard](https://docs.saleor.io/docs/3.x/dashboard/apps)
+The app uses synchronous webhooks: `checkout-calculate-taxes`, `order-calculate-taxes`, to calculate sales taxes for Saleor.
+The TaxJar's order transaction is created for each `US` order (by using `order-created` webhook).
+The App assumes that the received prices from Saleor are always `.net` prices.
 
 ## How to use this project
 
-### Saleor CLI for the win 🚀
-[Saleor CLI](https://github.com/saleor/saleor-cli) is designed to save you from the repetitive chores around Saleor development, including creating Apps. It will take the burden of spawning new apps locally, connecting them with Saleor environments, and establishing a tunnel for local development in seconds.
+### Installation
 
-[Full Saleor CLI reference](https://docs.saleor.io/docs/3.x/developer/cli)
+App installation on Saleor is described here:
 
-If you don't have (free developer) Saleor Cloud account create one with the following command:
-```
-saleor register
-```
+- from the command line: https://docs.saleor.io/docs/3.x/developer/extending/apps/installing-apps#installing-third-party-apps
+- from graphQL API: https://docs.saleor.io/docs/3.x/developer/extending/apps/installing-apps#installation-using-graphql-api
+- from dashboard: `https://<saleor-domain>/apps/install?manifestUrl=https://<app-domain>/api/manifest`
 
-Now you're ready to create your first App:
-```
-saleor app create [your-app-name]
-```
+where `manifest` path is `https://<app-domain>/api/manifest`.
 
-In this step, Saleor CLI will:
-- clone this repository to the specified folder
-- install dependencies
-- ask you whether you'd like to install the app in the selected Saleor environment
-- create `.env` file
-- start the app in development mode
+> **Warning** Subscription to webhooks for events: `checkout-calculate-taxes`, and `order-calculate-taxes` need to be created manually. This will be changed in the future.
 
-Having your app ready, the final thing you want to establish is a tunnel with your Saleor environment. Go to your app's directory first and run:
-```
-saleor app tunnel
-```
-Your local application should be available now to the outside world (Saleor instance) for accepting all the events via webhooks.
+### Configuration
 
-A quick note: the next time you come back to your project, it is enough to launch your app in a standard way (and then launch your tunnel as described earlier):
+The App configuration can be done from the Saleor dashboard. After sucesfull app installation, go to `saleor-dashboard -> apps -> Saleor TaxJar`:
+
+- `API Key` is mandatory to activate an App. To generate API key, go to TaxJar admin pannel -> Account -> API Access.
+- Enable `Active` when you are ready to use TaxJar App.
+- Enable `Sandbox` when you use TaxJar in sandbox mode.
+- `Ship from` details are mandatory for correct tax calculation.
+
+> **Note**
+> Checkout and orders that are related to not configured channels will be skipped by App. Taxes will not be calculated for them. Make sure that you activate TaxJar App for all required channels.
+
+The TaxJar tax group can be set in `Product` metadata and `ProductType` metadata. The expected field is `taxjar_tax_code`. The TaxJar tax groups can be found [here](https://developers.taxjar.com/api/reference/#get-list-tax-categories).
+When the tax group is not set, the standard tax group will be used.
+
+### Local development
+
+Update `.env` file:
 
 ```
-pnpm dev
-```
-or 
-```
-npm run dev
+SALEOR_DOMAIN=your-saleor-instance.com
 ```
 
-### Manual installation
-If you don't want to use our CLI tool, just clone this repository and use standard tools instead. Learn how to [install your app manually](https://docs.saleor.io/docs/3.x/developer/extending/apps/installing-apps#installation-using-graphql-api) at any Saleor instance from our general docs and use tunneling tools like [localtunnel](https://github.com/localtunnel/localtunnel) or [ngrok](https://ngrok.com/) in order to expose it to the external world if needed.
+Install dependencies `pnpm install`
 
+Start local server `pnpm run dev`
 
-That's it! 🦄
+Follow the guide [how install your app](https://docs.saleor.io/docs/3.x/developer/extending/apps/installing-apps#installation-using-graphql-api) and use tunneling tools like [localtunnel](https://github.com/localtunnel/localtunnel) or [ngrok](https://ngrok.com/) in order to expose your local server.
+
+If you use [saleor-dashboard](https://github.com/saleor/saleor-dashboard) and your local server is exposed, you can install your app by following this link:
+
+```
+[YOUR_SALEOR_DASHBOARD_URL]/apps/install?manifestUrl=[YOUR_APPS_MANIFEST_URL]
+```
+
+### Generated schema and typings
+
+Commands `build` and `dev` would generate schema and typed functions using Saleor's GraphQL endpoint. Commit `generated` folder to your repo as they are necessary for queries and keeping track of the schema changes.
+
+[Learn more](https://www.graphql-code-generator.com/) about GraphQL code generation.
+
+### ENVs:
+
+- `SETTINGS_ENCRYPTION_SECRET` - used to encrypt/decrypt secret data (like APIKey) that is stored in Saleor's App's private metadata.
+- `SALEOR_DOMAIN ` - Only declared Saleor domain will be allowed to fetch taxes from the app.
+
+## Learn more about Apps
+
+- [Apps guide](https://docs.saleor.io/docs/3.x/developer/extending/apps/key-concepts)
+
+- [Configuring apps in dashboard](https://docs.saleor.io/docs/3.x/dashboard/apps)
+
+- [Saleor App Template](https://github.com/saleor/saleor-app-template)

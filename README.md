@@ -18,19 +18,19 @@ App installation on Saleor is described here:
 
 where `manifest` path is `https://<app-domain>/api/manifest`.
 
-> **Warning** Subscription to webhooks for events: `checkout-calculate-taxes`, and `order-calculate-taxes` need to be created manually. This will be changed in the future.
+> **Warning** Subscribing webhooks for events: `checkout-calculate-taxes`, and `order-calculate-taxes` need to be created manually via API. This will be changed in the future.
 
 ### Configuration
 
 The App configuration can be done from the Saleor dashboard. After sucesfull app installation, go to `saleor-dashboard -> apps -> Saleor TaxJar`:
 
-- `API Key` is mandatory to activate an App. To generate API key, go to TaxJar admin pannel -> Account -> API Access.
+- `API Key` is mandatory to activate the app. To generate API key, go to TaxJar admin pannel -> Account -> API Access.
 - Enable `Active` when you are ready to use TaxJar App.
 - Enable `Sandbox` when you use TaxJar in sandbox mode.
 - `Ship from` details are mandatory for correct tax calculation.
 
 > **Note**
-> Checkout and orders that are related to not configured channels will be skipped by App. Taxes will not be calculated for them. Make sure that you activate TaxJar App for all required channels.
+> Checkouts and orders that are related to not configured channels will be skipped by App. Taxes will not be calculated for them. Make sure that you activate TaxJar App for all required channels.
 
 The TaxJar tax group can be set in `Product` metadata and `ProductType` metadata. The expected field is `taxjar_tax_code`. The TaxJar tax groups can be found [here](https://developers.taxjar.com/api/reference/#get-list-tax-categories).
 When the tax group is not set, the standard tax group will be used.

@@ -27,22 +27,31 @@ export const getTaxJarConfig = async (
 };
 
 export const taxJarConfigIsValidToUse = (taxJarConfig: TaxJarConfig) => {
-  let message = "";
-  let status = 200;
-  let isValid = true;
-  if (!taxJarConfig.active) {
-    console.log("TaxJar is not active.");
-    message = "TaxJar is not active.";
-    isValid = false;
-  } else if (!taxJarConfig.apiKey) {
-    console.log("TaxJar apiKey was not provided.");
-    message = "TaxJar apiKey was not provided.";
-    status = 404;
-    isValid = false;
-  }
-  return {
-    message,
-    status,
-    isValid,
+    const defaultResponse = {
+      isValid: true,
+      status: 200,
+      message: ""
+    };
+  
+    if (!taxJarConfig.active) {
+      console.log("TaxJar is not active.");
+      return {
+        ...defaultResponse,
+        message: "TaxJar is not active.",
+        isValid: false,
+      };
+    } else if (!taxJarConfig.apiKey) {
+      console.log("TaxJar apiKey was not provided.");
+  
+      return {
+        message: "TaxJar apiKey was not provided.",
+        status: 404,
+        isValid: false,
+      };
+    }
+  
+    return {
+      ...defaultResponse,
+      message: "",
+    };
   };
-};

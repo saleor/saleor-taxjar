@@ -24,7 +24,7 @@ export const setAuthToken = async (token: string) => {
       process.env.SALEOR_MARKETPLACE_REGISTER_URL,
       "Env var SALEOR_MARKETPLACE_REGISTER_URL is not configured."
     );
-    await fetch(process.env.SALEOR_MARKETPLACE_REGISTER_URL as string, {
+    await fetch(process.env.SALEOR_MARKETPLACE_REGISTER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

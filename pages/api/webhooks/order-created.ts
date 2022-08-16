@@ -22,7 +22,7 @@ const handler: Handler = async (request) => {
     const order = body.order!;
 
     const taxJarConfig = await getTaxJarConfig(
-      saleorDomain as string,
+      saleorDomain,
       order.channel.slug
     );
     if (!taxJarConfig) {

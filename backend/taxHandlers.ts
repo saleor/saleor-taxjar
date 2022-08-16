@@ -74,12 +74,12 @@ const calculateTaxes = async (
     ...taxData,
     lines: linesWithChargeTaxes,
   };
-  const taxResposne =
+  const taxResponse =
     linesWithChargeTaxes.length !== 0
       ? await fetchTaxes(taxDataWithChargeTaxes, taxJarConfig)
       : undefined;
 
-  const taxDetails = taxResposne?.tax.breakdown;
+  const taxDetails = taxResponse?.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
 
   const shippingPriceGross = shippingDetails

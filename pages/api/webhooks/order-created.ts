@@ -1,44 +1,59 @@
-import { NextApiHandler } from "next";
 import { createTaxJarOrder } from "../../../backend/taxHandlers";
 import { OrderCreatedEventSubscriptionFragment } from "../../../generated/graphql";
 
-import { getTaxJarConfig } from "../../../backend/utils";
-import { webhookMiddleware } from "../../../lib/middlewares";
-import MiddlewareError from "../../../utils/MiddlewareError";
+import { withSaleorDomainMatch } from "@/lib/middlewares";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
+import {
+  withSaleorEventMatch,
+  withWebhookSignatureVerified,
+} from "@saleor/app-sdk/middleware";
+import type { Handler } from "retes";
+import { toNextHandler } from "retes/adapter";
+import { Response } from "retes/response";
+import {
+  getTaxJarConfig,
+  taxJarConfigIsValidToUse,
+} from "../../../backend/utils";
 
-const expectedEvent = "order_created";
+const handler: Handler = async (request) => {
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
-const handler: NextApiHandler = async (request, response) => {
-  // FIXME: the validation of webhook should take into account webhook.secretKey,
-  // the domain should also be validated
-  try {
-    webhookMiddleware(request, expectedEvent);
-  } catch (e: unknown) {
-    const error = e as MiddlewareError;
-
-    console.error(error); // For deployment debug purpose
-    response
-      .status(error.statusCode)
-      .json({ success: false, message: error.message });
-    return;
-  }
-
-  const body: OrderCreatedEventSubscriptionFragment = request.body;
-
-  // FIXME: this part of settings will be fetched from App.metadata and defined based
-  // on channnel used in order.
-  const taxJarConfig = getTaxJarConfig();
+  const body: OrderCreatedEventSubscriptionFragment =
+    typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   if (body?.__typename === "OrderCreated") {
     const order = body.order!;
+
+    const taxJarConfig = await getTaxJarConfig(
+      saleorDomain,
+      order.channel.slug
+    );
+    const validData = taxJarConfigIsValidToUse(taxJarConfig);
+
+    if (!validData.isValid) {
+      return { body: validData.message, status: validData.status };
+    }
+
     const orderFromTaxJar = await createTaxJarOrder(order, taxJarConfig);
     if (orderFromTaxJar) {
-      response.json({ success: true });
-      return;
+      return Response.OK({ success: true });
     }
   }
-
-  response.json({ success: false });
+  return Response.BadRequest({
+    success: false,
+    message: "Incorrect payload event.",
+  });
 };
 
-export default handler;
+export default toNextHandler([
+  withSaleorDomainMatch,
+  withSaleorEventMatch("order_created"),
+  withWebhookSignatureVerified(),
+  handler,
+]);
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

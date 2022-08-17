@@ -80,7 +80,7 @@ export type FetchTaxesLinePayload = {
   chargeTaxes: boolean;
   unitAmount: number;
   totalAmount: number;
-}
+};
 export type FetchTaxesPayload = {
   channel: ChannelPayload;
   address: AddressPayload;
@@ -114,4 +114,5 @@ export interface TaxJarConfig {
   shipFrom: TaxJarAddress;
   apiKey: string;
   sandbox: boolean;
+  active: boolean;
 }

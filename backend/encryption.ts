@@ -7,9 +7,12 @@ import {
 } from "@/types/api";
 import CryptoJS from "crypto-js";
 
-const PLACEHOLDER = "••••";
+export const PLACEHOLDER = "••••";
 
 export const obfuscateValue = (value: string) => {
+  if (!value) {
+    return "";
+  }
   const unobfuscatedLength = Math.min(4, value.length - 4);
 
   // if value is 4 characters or less, obfuscate entire value

@@ -1,4 +1,4 @@
-import { SALEOR_DOMAIN_HEADER } from "@/constants";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
 import { app } from "./app";
 
 export const getAuthHeaders = () => ({

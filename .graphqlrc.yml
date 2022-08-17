@@ -10,3 +10,9 @@ extensions:
           - typescript-operations
           - urql-introspection
           - typescript-urql
+        config:
+          scalars:
+            JSONString: string
+            UUID: string
+          dedupeOperationSuffix: true # Prevent suffix duplication in generated names
+          enumsAsTypes: true

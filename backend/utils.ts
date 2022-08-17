@@ -1,16 +1,57 @@
+import { fetchChannelsSettings } from "./metaHandlers";
 import { TaxJarConfig } from "./types";
 
-export const getTaxJarConfig = () => {
+export const getTaxJarConfig = async (
+  saleorDomain: string,
+  channelSlug: string
+) => {
+  const settings = await fetchChannelsSettings(saleorDomain, [channelSlug]);
+
+  type ConfigurationPayloadKey = keyof typeof settings;
+  const channelKey = channelSlug as ConfigurationPayloadKey;
+  const channelSettings = settings?.[channelKey];
+
   const taxJarConfig: TaxJarConfig = {
     shipFrom: {
-      fromCountry: process.env.TAXJAR_FROM_COUNTRY!,
-      fromZip: process.env.TAXJAR_FROM_ZIP!,
-      fromState: process.env.TAXJAR_FROM_STATE!,
-      fromCity: process.env.TAXJAR_FROM_CITY!,
-      fromStreet: process.env.TAXJAR_FROM_STREET!,
+      fromCountry: channelSettings?.shipFromCountry || "",
+      fromZip: channelSettings?.shipFromZip || "",
+      fromState: channelSettings?.shipFromState || "",
+      fromCity: channelSettings?.shipFromCity || "",
+      fromStreet: channelSettings?.shipFromStreet || "",
     },
-    apiKey: process.env.TAXJAR_API_KEY!,
-    sandbox: process.env.TAXJAR_SANDBOX !== "false",
+    apiKey: channelSettings?.apiKey || "",
+    sandbox: channelSettings?.sandbox || true,
+    active: channelSettings?.active || false,
   };
   return taxJarConfig;
 };
+
+export const taxJarConfigIsValidToUse = (taxJarConfig: TaxJarConfig) => {
+    const defaultResponse = {
+      isValid: true,
+      status: 200,
+      message: ""
+    };
+  
+    if (!taxJarConfig.active) {
+      console.log("TaxJar is not active.");
+      return {
+        ...defaultResponse,
+        message: "TaxJar is not active.",
+        isValid: false,
+      };
+    } else if (!taxJarConfig.apiKey) {
+      console.log("TaxJar apiKey was not provided.");
+  
+      return {
+        message: "TaxJar apiKey was not provided.",
+        status: 404,
+        isValid: false,
+      };
+    }
+  
+    return {
+      ...defaultResponse,
+      message: "",
+    };
+  };

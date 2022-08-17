@@ -1,37 +1,49 @@
-import { NextApiHandler } from "next";
+import { withSaleorDomainMatch } from "@/lib/middlewares";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
+import {
+  withSaleorEventMatch,
+  withWebhookSignatureVerified,
+} from "@saleor/app-sdk/middleware";
+import type { Handler } from "retes";
+import { toNextHandler } from "retes/adapter";
+import { Response } from "retes/response";
 import { calculateOrderTaxes } from "../../../backend/taxHandlers";
 import { OrderPayload } from "../../../backend/types";
-import { getTaxJarConfig } from "../../../backend/utils";
+import {
+  getTaxJarConfig,
+  taxJarConfigIsValidToUse,
+} from "../../../backend/utils";
 
-import { webhookMiddleware } from "../../../lib/middlewares";
-import MiddlewareError from "../../../utils/MiddlewareError";
-
-const expectedEvent = "order_calculate_taxes";
-
-const handler: NextApiHandler = async (request, response) => {
-  // FIXME: the validation of webhook should take into account webhook.secretKey,
-  // the domain should also be validated
-  try {
-    webhookMiddleware(request, expectedEvent);
-  } catch (e: unknown) {
-    const error = e as MiddlewareError;
-    console.log(error);
-    response
-      .status(error.statusCode)
-      .json({ success: false, message: error.message });
-    return;
-  }
+const handler: Handler = async (request) => {
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
   const body: OrderPayload[] =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
   const orderPayload: OrderPayload = body[0];
 
-  // FIXME: this part of settings will be fetched from App.metadata and defined based
-  // on channnel used in order.
-  const taxJarConfig = getTaxJarConfig();
+  const taxJarConfig = await getTaxJarConfig(
+    saleorDomain,
+    orderPayload.channel.slug
+  );
+  const validData = taxJarConfigIsValidToUse(taxJarConfig);
+
+  if (!validData.isValid) {
+    return { body: validData.message, status: validData.status };
+  }
   const calculatedTaxes = await calculateOrderTaxes(orderPayload, taxJarConfig);
-  response.json(calculatedTaxes.data);
+  return Response.OK(calculatedTaxes.data);
 };
 
-export default handler;
+export default toNextHandler([
+  withSaleorDomainMatch,
+  withSaleorEventMatch("order_calculate_taxes"),
+  withWebhookSignatureVerified(),
+  handler,
+]);
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

@@ -1,16 +1,30 @@
+import { fetchChannelsSettings } from "./metaHandlers";
 import { TaxJarConfig } from "./types";
 
-export const getTaxJarConfig = () => {
+export const getTaxJarConfig = async (
+  saleorDomain: string,
+  channelSlug: string
+) => {
+  const settings = await fetchChannelsSettings(saleorDomain, [channelSlug]);
+
+  type ConfigurationPayloadKey = keyof typeof settings;
+  const channelKey = channelSlug as ConfigurationPayloadKey;
+  const channelSettings = settings?.[channelKey];
+
+  if (!channelSettings?.apiKey) {
+    return null;
+  }
+
   const taxJarConfig: TaxJarConfig = {
     shipFrom: {
-      fromCountry: process.env.TAXJAR_FROM_COUNTRY!,
-      fromZip: process.env.TAXJAR_FROM_ZIP!,
-      fromState: process.env.TAXJAR_FROM_STATE!,
-      fromCity: process.env.TAXJAR_FROM_CITY!,
-      fromStreet: process.env.TAXJAR_FROM_STREET!,
+      fromCountry: channelSettings?.shipFromCountry || "",
+      fromZip: channelSettings?.shipFromZip || "",
+      fromState: channelSettings?.shipFromState || "",
+      fromCity: channelSettings?.shipFromCity || "",
+      fromStreet: channelSettings?.shipFromStreet || "",
     },
-    apiKey: process.env.TAXJAR_API_KEY!,
-    sandbox: process.env.TAXJAR_SANDBOX !== "false",
+    apiKey: channelSettings.apiKey,
+    sandbox: channelSettings?.sandbox || true,
   };
   return taxJarConfig;
 };

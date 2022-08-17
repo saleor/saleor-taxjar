@@ -1,9 +1,9 @@
-import { FetchResponse } from "../frontend/hooks/useFetch";
 import { getAuthHeaders } from "@/misc/auth";
+import { FetchResponse } from "../frontend/hooks/useFetch";
 import { ConfigurationPayload } from "../types/api";
 
 export interface ConfigurationQuery {
-  channelId: string | string[];
+  channelSlug: string | string[];
 }
 
 export interface ConfigurationRequest {
@@ -13,7 +13,7 @@ export interface ConfigurationRequest {
 export const requestGetConfiguration = (
   params: ConfigurationQuery
 ): FetchResponse<ConfigurationRequest> =>
-  fetch(`/api/configuration?channel=${params.channelId}`, {
+  fetch(`/api/configuration?channel=${params.channelSlug}`, {
     method: "GET",
     // @ts-ignore
     headers: getAuthHeaders(),
@@ -23,7 +23,7 @@ export const requestSetConfiguration = (
   params: ConfigurationQuery,
   data: ConfigurationRequest
 ): FetchResponse<ConfigurationRequest> =>
-  fetch(`/api/configuration?channel=${params.channelId}`, {
+  fetch(`/api/configuration?channel=${params.channelSlug}`, {
     method: "POST",
     // @ts-ignore
     headers: getAuthHeaders(),

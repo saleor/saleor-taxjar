@@ -13,7 +13,9 @@ import { withJWTVerified, withSaleorDomainMatch } from "../../lib/middlewares";
 import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
+  validateConfigurationBeforeSave,
 } from "@/backend/metaHandlers";
+import { ConfigurationPayload } from "@/types/api";
 import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
 import { graphQLUrl } from "@saleor/app-sdk/urls";
 import { Handler } from "retes";
@@ -95,6 +97,19 @@ const handler: Handler = async (request) => {
         ? prepareResponseFromMetadata(currentPrivateMetadata, channels, false)
         : null;
 
+      const updatedChannelsConfiguration: ConfigurationPayload = JSON.parse(
+        request.body as unknown as string
+      ).data;
+      const validConfigData = validateConfigurationBeforeSave(
+        updatedChannelsConfiguration
+      );
+      if (!validConfigData.isValid) {
+        return Response.BadRequest({
+          success: false,
+          error: { message: validConfigData.message },
+        });
+      }
+
       privateMetadata = (
         await client
           .mutation<
@@ -103,7 +118,7 @@ const handler: Handler = async (request) => {
           >(UpdateAppMetadataDocument, {
             id: appId,
             input: prepareMetadataFromRequest(
-              JSON.parse(request.body as unknown as string).data,
+              updatedChannelsConfiguration,
               currentChannelsConfigurations
             ),
             keys: channels,

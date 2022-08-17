@@ -11,10 +11,6 @@ export const getTaxJarConfig = async (
   const channelKey = channelSlug as ConfigurationPayloadKey;
   const channelSettings = settings?.[channelKey];
 
-  if (!channelSettings?.apiKey) {
-    return null;
-  }
-
   const taxJarConfig: TaxJarConfig = {
     shipFrom: {
       fromCountry: channelSettings?.shipFromCountry || "",
@@ -23,8 +19,39 @@ export const getTaxJarConfig = async (
       fromCity: channelSettings?.shipFromCity || "",
       fromStreet: channelSettings?.shipFromStreet || "",
     },
-    apiKey: channelSettings.apiKey,
+    apiKey: channelSettings?.apiKey || "",
     sandbox: channelSettings?.sandbox || true,
+    active: channelSettings?.active || false,
   };
   return taxJarConfig;
 };
+
+export const taxJarConfigIsValidToUse = (taxJarConfig: TaxJarConfig) => {
+    const defaultResponse = {
+      isValid: true,
+      status: 200,
+      message: ""
+    };
+  
+    if (!taxJarConfig.active) {
+      console.log("TaxJar is not active.");
+      return {
+        ...defaultResponse,
+        message: "TaxJar is not active.",
+        isValid: false,
+      };
+    } else if (!taxJarConfig.apiKey) {
+      console.log("TaxJar apiKey was not provided.");
+  
+      return {
+        message: "TaxJar apiKey was not provided.",
+        status: 404,
+        isValid: false,
+      };
+    }
+  
+    return {
+      ...defaultResponse,
+      message: "",
+    };
+  };

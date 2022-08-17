@@ -114,4 +114,5 @@ export interface TaxJarConfig {
   shipFrom: TaxJarAddress;
   apiKey: string;
   sandbox: boolean;
+  active: boolean;
 }

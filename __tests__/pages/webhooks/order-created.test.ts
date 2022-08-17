@@ -5,7 +5,7 @@ import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
-import * as orderCreated from "../../../pages/api/webhooks/order-created";
+import toNextHandler from "../../../pages/api/webhooks/order-created";
 import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
 import {
   dummyOrderCreatedPayload,
@@ -47,7 +47,7 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -76,7 +76,7 @@ describe("api/webhooks/order-created", () => {
     const orderPayload = dummyOrderCreatedPayload;
     req.body = orderPayload;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -107,7 +107,7 @@ describe("api/webhooks/order-created", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -145,7 +145,7 @@ describe("api/webhooks/order-created", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -167,11 +167,9 @@ describe("api/webhooks/order-created", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
 
     const orderPayload = dummyOrderCreatedPayload;
@@ -185,7 +183,7 @@ describe("api/webhooks/order-created", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -213,11 +211,9 @@ describe("api/webhooks/order-created", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
 
     const orderPayload = dummyOrderCreatedPayload;
@@ -233,7 +229,7 @@ describe("api/webhooks/order-created", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await orderCreated.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );

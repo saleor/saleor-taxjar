@@ -80,7 +80,7 @@ export type FetchTaxesLinePayload = {
   chargeTaxes: boolean;
   unitAmount: number;
   totalAmount: number;
-}
+};
 export type FetchTaxesPayload = {
   channel: ChannelPayload;
   address: AddressPayload;

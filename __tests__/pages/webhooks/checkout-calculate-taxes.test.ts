@@ -13,7 +13,7 @@ import * as joseModule from "jose";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as taxJarRequest from "taxjar/dist/util/request";
 import { Request } from "taxjar/dist/util/types";
-import * as calculateTaxes from "../../../pages/api/webhooks/checkout-calculate-taxes";
+import toNextHandler from "../../../pages/api/webhooks/checkout-calculate-taxes";
 
 jest.mock("next/dist/compiled/raw-body/index.js", () => ({
   __esModule: true,
@@ -46,10 +46,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       domain,
     });
 
-    const checkoutPayload = dummyFetchTaxesPayload;
+    const checkoutPayload = { ...dummyFetchTaxesPayload };
     req.body = [checkoutPayload];
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -75,10 +75,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       domain: testDomain,
     });
 
-    const checkoutPayload = dummyFetchTaxesPayload;
+    const checkoutPayload = { ...dummyFetchTaxesPayload };
     req.body = [checkoutPayload];
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -105,13 +105,11 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       signature,
     });
 
-    const checkoutPayload = dummyFetchTaxesPayload;
-
     // set body to undefined as the webhook handler expects that
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -130,7 +128,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       .spyOn(taxJarRequest, "default")
       .mockImplementation((_) => ({ post: post } as unknown as Request));
 
-    const checkoutPayload = dummyCheckoutPayload;
+    const checkoutPayload = { ...dummyCheckoutPayload };
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
@@ -149,7 +147,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -171,14 +169,12 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
 
-    const checkoutPayload = dummyCheckoutPayload;
+    const checkoutPayload = { ...dummyCheckoutPayload };
 
     // set body to undefined as the webhook handler expects that
     // the processed body doesn't exist.
@@ -190,7 +186,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       toString: () => JSON.stringify([checkoutPayload]),
     });
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -220,13 +216,11 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
 
     const mockJose = jest
       .spyOn(joseModule, "flattenedVerify")
-      .mockReturnValue(
-        Promise.resolve(
-          {} as unknown as joseModule.FlattenedVerifyResult &
-            joseModule.ResolvedKey
-        )
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
       );
-    const checkoutPayload = dummyCheckoutPayload;
+    const checkoutPayload = { ...dummyCheckoutPayload };
 
     checkoutPayload.discounts = [{ amount: "2" }, { amount: "1" }];
     const linePayload = checkoutPayload.lines[0];
@@ -242,7 +236,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // the processed body doesn't exist.
     req.body = undefined;
 
-    await calculateTaxes.default(
+    await toNextHandler(
       req as unknown as NextApiRequest,
       res as unknown as NextApiResponse
     );
@@ -257,6 +251,177 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     expect(data.lines[1].total_gross_amount).toBe("32.60");
     expect(data.lines[1].total_net_amount).toBe("26.50");
     expect(data.lines[1].tax_rate).toBe("0.23");
+    expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
+  });
+
+  it("with line that should not have calculated taxes", async () => {
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
+    });
+
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
+      );
+    const checkoutPayload = { ...dummyCheckoutPayload };
+
+    const linePayload = checkoutPayload.lines[0];
+    const secondLinePayload = {
+      ...linePayload,
+      id: "Q2hlY2tvdXRMaW5lOjc=",
+      charge_taxes: false,
+    };
+
+    checkoutPayload.lines = [linePayload, secondLinePayload];
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([checkoutPayload]),
+    });
+
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
+
+    await toNextHandler(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
+
+    const data: ResponseTaxPayload = res._getData();
+
+    expect(data.lines[0].total_gross_amount).toBe("34.44");
+    expect(data.lines[0].total_net_amount).toBe("28.00");
+    expect(data.lines[0].tax_rate).toBe("0.23");
+
+    expect(data.lines[1].total_gross_amount).toBe("28.00");
+    expect(data.lines[1].total_net_amount).toBe("28.00");
+    expect(data.lines[1].tax_rate).toBe("0");
+
+    expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
+  });
+
+  it("with discounts and line that should not have calculated taxes", async () => {
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
+    });
+
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
+      );
+    const checkoutPayload = { ...dummyCheckoutPayload };
+
+    checkoutPayload.discounts = [{ amount: "2" }, { amount: "1" }];
+    const linePayload = checkoutPayload.lines[0];
+    const secondLinePayload = {
+      ...linePayload,
+      id: "Q2hlY2tvdXRMaW5lOjc=",
+      charge_taxes: false,
+    };
+
+    checkoutPayload.lines = [linePayload, secondLinePayload];
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([checkoutPayload]),
+    });
+
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
+
+    await toNextHandler(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
+
+    const data: ResponseTaxPayload = res._getData();
+
+    // amounts already include propagated discount
+    expect(data.lines[0].total_gross_amount).toBe("32.60");
+    expect(data.lines[0].total_net_amount).toBe("26.50");
+    expect(data.lines[0].tax_rate).toBe("0.23");
+
+    expect(data.lines[1].total_gross_amount).toBe("26.50");
+    expect(data.lines[1].total_net_amount).toBe("26.50");
+    expect(data.lines[1].tax_rate).toBe("0");
+
+    expect(res.statusCode).toBe(200);
+
+    mockJose.mockRestore();
+  });
+
+  it("all lines with charge taxes set to false", async () => {
+    const { req, res } = mockRequest({
+      method: "POST",
+      event: "checkout_calculate_taxes",
+      domain: testDomain,
+      signature:
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6..-Y1p0YWNAuX0kOPIhfjoNoyWAkvRl6iMxWQ",
+    });
+
+    const mockJose = jest
+      .spyOn(joseModule, "flattenedVerify")
+      .mockResolvedValue(
+        {} as unknown as joseModule.FlattenedVerifyResult &
+          joseModule.ResolvedKey
+      );
+    const checkoutPayload = { ...dummyCheckoutPayload };
+
+    const linePayload = checkoutPayload.lines[0];
+    linePayload.charge_taxes = false;
+    const secondLinePayload = {
+      ...linePayload,
+      id: "Q2hlY2tvdXRMaW5lOjc=",
+      charge_taxes: false,
+    };
+
+    checkoutPayload.lines = [linePayload, secondLinePayload];
+
+    // set mock on next built-in library that build the payload from stream.
+    const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
+    rawBodyModule.default.mockReturnValue({
+      toString: () => JSON.stringify([checkoutPayload]),
+    });
+
+    // set body to undefined as the webhook handler expects that
+    // the processed body doesn't exist.
+    req.body = undefined;
+
+    await toNextHandler(
+      req as unknown as NextApiRequest,
+      res as unknown as NextApiResponse
+    );
+
+    const data: ResponseTaxPayload = res._getData();
+
+    expect(data.lines[0].total_gross_amount).toBe("28.00");
+    expect(data.lines[0].total_net_amount).toBe("28.00");
+    expect(data.lines[0].tax_rate).toBe("0");
+
+    expect(data.lines[1].total_gross_amount).toBe("28.00");
+    expect(data.lines[1].total_net_amount).toBe("28.00");
+    expect(data.lines[1].tax_rate).toBe("0");
+
     expect(res.statusCode).toBe(200);
 
     mockJose.mockRestore();

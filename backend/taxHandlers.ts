@@ -155,5 +155,5 @@ export const createTaxJarOrder = async (
   if (countryCode === "US") {
     return await createOrderTransaction(order, taxJarConfig);
   }
-  return;
+  return {};
 };

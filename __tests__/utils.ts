@@ -17,7 +17,7 @@ export const mockRequest = (configuration: RequestConfiguration) => {
   const method = configuration.method;
   const { req, res } = createMocks({ method });
   req.headers = {
-    "Content-Type": "application/json",
+    "content-type": "application/json",
   };
   if (configuration.domain !== undefined) {
     req.headers["saleor-domain"] = configuration.domain;
@@ -26,7 +26,7 @@ export const mockRequest = (configuration: RequestConfiguration) => {
     req.headers["saleor-event"] = configuration.event;
   }
   if (configuration.signature !== undefined) {
-    req.headers["x-saleor-signature"] = configuration.signature;
+    req.headers["saleor-signature"] = configuration.signature;
   }
 
   return { req, res };

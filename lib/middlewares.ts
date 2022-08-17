@@ -1,79 +1,105 @@
-import { NextApiRequest } from "next";
+import { FetchAppMetafieldsDocument } from "@/generated/graphql";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
+import { withSaleorDomainPresent } from "@saleor/app-sdk/middleware";
+import { graphQLUrl, jwksUrl } from "@saleor/app-sdk/urls";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import jwks, { CertSigningKey, RsaSigningKey } from "jwks-rsa";
+import { NextApiRequest } from "next";
+import type { Middleware } from "retes";
+import { Response } from "retes/response";
+import { getAuthToken } from "./environment";
+import { createClient } from "./graphql";
 
-import * as Constants from "../constants";
-import MiddlewareError from "../utils/MiddlewareError";
-import { jwksUrl } from "@saleor/app-sdk/urls";
+interface DashboardTokenPayload extends JwtPayload {
+  app: string;
+}
 
 export const getBaseURL = (req: NextApiRequest): string => {
   const { host, "x-forwarded-proto": protocol = "http" } = req.headers;
   return `${protocol}://${host}`;
 };
 
-export const domainMiddleware = (request: NextApiRequest) => {
-  const saleorDomain = request.headers[Constants.SALEOR_DOMAIN_HEADER];
-  if (!saleorDomain) {
-    throw new MiddlewareError("Missing saleor domain token.", 400);
-  }
-  return saleorDomain;
-};
+export const withSaleorDomainMatch: Middleware = (handler) =>
+  withSaleorDomainPresent((request) => {
+    const SALEOR_DOMAIN = process.env.SALEOR_DOMAIN;
 
-export const eventMiddleware = (
-  request: NextApiRequest,
-  expectedEvent: string
-) => {
-  const receivedEvent =
-    request.headers[Constants.SALEOR_EVENT_HEADER]?.toString();
-  if (receivedEvent !== expectedEvent) {
-    throw new MiddlewareError("Invalid event.", 400);
-  }
-};
-export const requestType = (request: NextApiRequest) => {
-  if (request.method !== "POST") {
-    throw new MiddlewareError("Only POST requests allowed", 405);
-  }
-};
+    if (SALEOR_DOMAIN === undefined) {
+      console.log("Missing SALEOR_DOMAIN environment variable.");
+      return Response.InternalServerError({
+        success: false,
+        message: "Missing SALEOR_DOMAIN environment variable.",
+      });
+    }
 
-export const webhookMiddleware = (
-  request: NextApiRequest,
-  expectedEvent: string
-) => {
-  requestType(request);
-  domainMiddleware(request);
-  eventMiddleware(request, expectedEvent);
-};
+    if (SALEOR_DOMAIN !== request.headers[SALEOR_DOMAIN_HEADER]) {
+      console.log(`Invalid ${SALEOR_DOMAIN_HEADER} header.`);
+      return Response.BadRequest({
+        success: false,
+        message: `Invalid ${SALEOR_DOMAIN_HEADER} header.`,
+      });
+    }
 
-export const jwtVerifyMiddleware = async (request: NextApiRequest) => {
+    return handler(request);
+  });
+
+export const withJWTVerified: Middleware = (handler) => async (request) => {
   const {
-    [Constants.SALEOR_DOMAIN_HEADER]: domain,
+    [SALEOR_DOMAIN_HEADER]: saleorDomain,
     "authorization-bearer": token,
   } = request.headers;
+
+  if (token === undefined) {
+    return Response.BadRequest({
+      success: false,
+      message: "Missing token.",
+    });
+  }
 
   let tokenClaims;
   try {
     tokenClaims = jwt.decode(token as string);
   } catch (e) {
     console.error(e);
-    throw new MiddlewareError("Invalid token.", 400);
+    return Response.BadRequest({
+      success: false,
+      message: "Invalid token.",
+    });
   }
 
   if (tokenClaims === null) {
-    throw new MiddlewareError("Missing token.", 400);
-  }
-
-  if (!domain) {
-    throw new MiddlewareError("Missing domain.", 400);
+    return Response.BadRequest({
+      success: false,
+      message: "Invalid token.",
+    });
   }
 
   if (
-    domain !== "localhost:8000" &&
-    (tokenClaims as JwtPayload).iss !== domain
+    saleorDomain !== "localhost:8000" &&
+    (tokenClaims as DashboardTokenPayload).iss !== saleorDomain
   ) {
-    throw new MiddlewareError("Invalid token.", 400);
+    return Response.BadRequest({
+      success: false,
+      message: "Invalid token.",
+    });
   }
 
-  const jwksClient = jwks({ jwksUri: jwksUrl(domain) });
+  const client = createClient(
+    graphQLUrl(saleorDomain),
+    async () => await Promise.resolve({ token: getAuthToken() })
+  );
+
+  const appDetails = await client.query(FetchAppMetafieldsDocument).toPromise();
+
+  const appId = appDetails?.data?.app?.id;
+
+  if ((tokenClaims as DashboardTokenPayload).app !== appId) {
+    return Response.BadRequest({
+      success: false,
+      message: "Invalid token.",
+    });
+  }
+
+  const jwksClient = jwks({ jwksUri: jwksUrl(saleorDomain) });
   const signingKey = await jwksClient.getSigningKey();
   const signingSecret =
     (signingKey as CertSigningKey).publicKey ||
@@ -82,7 +108,10 @@ export const jwtVerifyMiddleware = async (request: NextApiRequest) => {
   try {
     jwt.verify(token as string, signingSecret);
   } catch (e) {
-    console.error(e);
-    throw new MiddlewareError("Invalid token.", 400);
+    return Response.BadRequest({
+      success: false,
+      message: "Invalid token.",
+    });
   }
+  return handler(request);
 };

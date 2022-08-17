@@ -1,5 +1,3 @@
-import { NextApiHandler } from "next";
-
 import {
   FetchAppMetafieldsDocument,
   FetchAppMetafieldsQuery,
@@ -10,48 +8,37 @@ import {
 } from "../../generated/graphql";
 import { getAuthToken } from "../../lib/environment";
 import { createClient } from "../../lib/graphql";
-import { domainMiddleware, jwtVerifyMiddleware } from "../../lib/middlewares";
-import MiddlewareError from "../../utils/MiddlewareError";
+import { withJWTVerified, withSaleorDomainMatch } from "../../lib/middlewares";
 
 import {
   prepareMetadataFromRequest,
   prepareResponseFromMetadata,
 } from "@/backend/metaHandlers";
+import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
 import { graphQLUrl } from "@saleor/app-sdk/urls";
+import { Handler } from "retes";
+import { toNextHandler } from "retes/adapter";
+import { Response } from "retes/response";
 
-const handler: NextApiHandler = async (request, response) => {
-  let saleorDomain: string;
+const handler: Handler = async (request) => {
+  const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
-  try {
-    saleorDomain = domainMiddleware(request) as string;
-    await jwtVerifyMiddleware(request);
-  } catch (e: unknown) {
-    const error = e as MiddlewareError;
-
-    console.error(error); // For deployment debug purpose
-    response.status(error.statusCode).json({
-      success: false,
-      error,
-    });
-    return;
-  }
   const client = createClient(
     graphQLUrl(saleorDomain),
     async () => await Promise.resolve({ token: getAuthToken() })
   );
 
   let privateMetadata;
-  const channelQuery = request.query.channel;
+  const channelQuery = request.params.channel;
   const channels =
     typeof channelQuery === "string" ? [channelQuery] : channelQuery;
   switch (request.method!) {
     case "GET":
       if (!channels?.length) {
-        response.json({
+        return Response.BadRequest({
           success: false,
           error: { message: "Query param 'channel' is required" },
         });
-        return;
       }
       privateMetadata = (
         await client
@@ -64,24 +51,22 @@ const handler: NextApiHandler = async (request, response) => {
           .toPromise()
       ).data?.app?.privateMetafields;
       if (privateMetadata) {
-        response.json({
+        return Response.OK({
           success: true,
           data: prepareResponseFromMetadata(privateMetadata, channels, true),
         });
       } else {
-        response.json({
+        return Response.BadRequest({
           success: false,
           error: { message: "Unable to fetch app configuration." },
         });
       }
-      break;
     case "POST":
       if (!channels?.length) {
-        response.json({
+        return Response.BadRequest({
           success: false,
           error: { message: "Query param 'channel' is required" },
         });
-        return;
       }
 
       const appId = (
@@ -91,11 +76,10 @@ const handler: NextApiHandler = async (request, response) => {
       ).data?.app?.id;
 
       if (!appId) {
-        response.json({
+        return Response.BadRequest({
           success: false,
           error: { message: "Unable to fetch app id." },
         });
-        return;
       }
       const currentPrivateMetadata = (
         await client
@@ -119,7 +103,7 @@ const handler: NextApiHandler = async (request, response) => {
           >(UpdateAppMetadataDocument, {
             id: appId,
             input: prepareMetadataFromRequest(
-              JSON.parse(request.body).data,
+              JSON.parse(request.body as unknown as string).data,
               currentChannelsConfigurations
             ),
             keys: channels,
@@ -128,23 +112,19 @@ const handler: NextApiHandler = async (request, response) => {
       ).data?.updatePrivateMetadata?.item?.privateMetafields!;
 
       if (privateMetadata) {
-        response.json({
+        return Response.OK({
           success: true,
           data: prepareResponseFromMetadata(privateMetadata, channels, true),
         });
       } else {
-        response.json({
+        return Response.BadRequest({
           success: false,
           error: { message: "Unable to fetch app configuration." },
         });
       }
-      break;
     default:
-      response.status(405).json({
-        success: false,
-        error: { message: "Method not allowed." },
-      });
+      return Response.MethodNotAllowed();
   }
 };
 
-export default handler;
+export default toNextHandler([withSaleorDomainMatch, withJWTVerified, handler]);

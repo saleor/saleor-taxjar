@@ -41,6 +41,7 @@ specifiers:
   graphql: ^16.5.0
   graphql-tag: ^2.12.6
   jest: ^28.1.0
+  jose: ^4.8.3
   json-easy-strip: ^1.0.6
   jsonwebtoken: ^8.5.1
   jwks-rsa: ^2.1.2
@@ -54,6 +55,7 @@ specifiers:
   react-dom: 18.1.0
   react-helmet: ^6.1.0
   react-hook-form: ^7.31.3
+  retes: ^0.31.1
   setup-polly-jest: ^0.11.0
   tailwindcss: ^3.0.24
   taxjar: ^4.0.1
@@ -86,6 +88,7 @@ dependencies:
   react-dom: 18.1.0_react@18.1.0
   react-helmet: 6.1.0_react@18.1.0
   react-hook-form: 7.33.1_react@18.1.0
+  retes: 0.31.1
   taxjar: 4.0.1
   ts-invariant: 0.10.3
   urql: 2.2.0_7oyq4t3ocdziwagw7zfqg4youi
@@ -118,6 +121,7 @@ devDependencies:
   eslint-config-google: 0.14.0_eslint@8.15.0
   eslint-config-next: 12.1.6_6vdljae35l7howjttefzzsim3e
   jest: 28.1.0_@types+node@17.0.32
+  jose: 4.8.3
   node-mocks-http: 1.11.0
   postcss: 8.4.13
   prettier: 2.6.2
@@ -5755,7 +5759,6 @@ packages:
 
   /jose/4.8.3:
     resolution: {integrity: sha512-7rySkpW78d8LBp4YU70Wb7+OTgE3OwAALNVZxhoIhp4Kscp+p/fBkdpxGAMKxvCAMV4QfXBU9m6l9nX/vGwd2g==}
-    dev: false
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -7375,6 +7378,12 @@ packages:
 
   /retes/0.29.4:
     resolution: {integrity: sha512-c6Ji2oGfXN/abuLRVLUT0/eklLuAlargjBR0Ru/FAhgmL2TtEhNl2OQ3UnFSUYXa8a6v9qrEb6UvIp0A6KlJ5w==}
+    dependencies:
+      busboy: 1.6.0
+    dev: false
+
+  /retes/0.31.1:
+    resolution: {integrity: sha512-lmeGyK/LzDVqqlkP6W3dids/fatT2niY3eBls3+wn1ArOKdyv17Kmmvt6TTrV1g6MTV6Z/ZxCbxAXtBAMRVMFw==}
     dependencies:
       busboy: 1.6.0
     dev: false

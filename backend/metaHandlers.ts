@@ -118,11 +118,11 @@ export const validateConfigurationBeforeSave = (
 ) => {
   const activeWithoutApiKeys = Object.entries(channelsConfiguration)
     .filter(
-      ([_, configuration]) =>
+      ([, configuration]) =>
         configuration.active &&
         (!configuration.apiKey || configuration.apiKey === PLACEHOLDER)
     )
-    .map(([channelSlug, _]) => channelSlug);
+    .map(([channelSlug]) => channelSlug);
   if (activeWithoutApiKeys.length !== 0) {
     console.log(
       "TaxJar cannot be active for the channel as API key is missing."

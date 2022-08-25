@@ -27,7 +27,20 @@ describe("TaxJar API handlers", () => {
     const payload = dummyFetchTaxesPayload;
     const config: TaxJarConfig = dummyTaxJarConfig;
 
-    await taxJarApi.fetchTaxes(payload, config);
+    const line = payload.lines[0];
+    const linesWithDiscounts = [
+      {
+        id: line.sourceLine.id,
+        chargeTaxes: line.chargeTaxes,
+        taxCode: null,
+        quantity: line.quantity,
+        totalAmount: line.totalPrice.amount,
+        unitAmount: line.unitPrice.amount,
+        discount: 0,
+      },
+    ];
+
+    await taxJarApi.fetchTaxes(payload, linesWithDiscounts, config);
 
     expect(post).toHaveBeenCalledWith({
       params: {
@@ -60,11 +73,22 @@ describe("TaxJar API handlers", () => {
     const taxJarApi = require("../../backend/taxjarApi");
 
     const payload = dummyFetchTaxesPayload;
-    payload.lines[0].discount = 3.33;
+    const line = payload.lines[0];
+    const linesWithDiscounts = [
+      {
+        id: line.sourceLine.id,
+        chargeTaxes: line.chargeTaxes,
+        taxCode: null,
+        quantity: line.quantity,
+        totalAmount: line.totalPrice.amount,
+        unitAmount: line.unitPrice.amount,
+        discount: 3.33,
+      },
+    ];
 
     const config: TaxJarConfig = dummyTaxJarConfig;
 
-    await taxJarApi.fetchTaxes(payload, config);
+    await taxJarApi.fetchTaxes(payload, linesWithDiscounts, config);
 
     expect(post).toHaveBeenCalledWith({
       params: {

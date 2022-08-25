@@ -1,16 +1,3 @@
-fragment AddressFragment on Address {
-  id
-  firstName
-  lastName
-  streetAddress1
-  streetAddress2
-  city
-  countryArea
-  postalCode
-  country {
-    code
-  }
-}
 fragment OrderLineFragment on OrderLine {
   productSku
   productName

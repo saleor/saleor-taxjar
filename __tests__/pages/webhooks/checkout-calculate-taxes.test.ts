@@ -3,7 +3,6 @@ import { PollyServer } from "@pollyjs/core";
 import { ResponseTaxPayload } from "../../../backend/types";
 import { setupPollyMiddleware, setupRecording } from "../../pollySetup";
 import {
-  dummyCheckoutPayload,
   dummyFetchTaxesPayload,
   dummyFetchTaxesResponse,
   mockRequest,
@@ -46,8 +45,11 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       domain,
     });
 
-    const checkoutPayload = { ...dummyFetchTaxesPayload };
-    req.body = [checkoutPayload];
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
+    req.body = checkoutPayload;
 
     await toNextHandler(
       req as unknown as NextApiRequest,
@@ -75,7 +77,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       domain: testDomain,
     });
 
-    const checkoutPayload = { ...dummyFetchTaxesPayload };
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
     req.body = [checkoutPayload];
 
     await toNextHandler(
@@ -128,11 +133,14 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
       .spyOn(taxJarRequest, "default")
       .mockImplementation((_) => ({ post: post } as unknown as Request));
 
-    const checkoutPayload = { ...dummyCheckoutPayload };
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     const signature = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6.ABCD";
@@ -174,7 +182,10 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
           joseModule.ResolvedKey
       );
 
-    const checkoutPayload = { ...dummyCheckoutPayload };
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
 
     // set body to undefined as the webhook handler expects that
     // the processed body doesn't exist.
@@ -183,7 +194,7 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     await toNextHandler(
@@ -192,9 +203,8 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
     );
 
     const data: ResponseTaxPayload = res._getData();
-
-    expect(data.shipping_price_gross_amount).toBe("12.3");
-    expect(data.shipping_price_net_amount).toBe("10");
+    expect(data.shipping_price_gross_amount).toBe("12.30");
+    expect(data.shipping_price_net_amount).toBe("10.00");
     expect(data.shipping_tax_rate).toBe("0.23");
     expect(data.lines.length).toBe(1);
     expect(data.lines[0].total_gross_amount).toBe("34.44");
@@ -220,16 +230,29 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
         {} as unknown as joseModule.FlattenedVerifyResult &
           joseModule.ResolvedKey
       );
-    const checkoutPayload = { ...dummyCheckoutPayload };
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
 
-    checkoutPayload.discounts = [{ amount: "2" }, { amount: "1" }];
-    const linePayload = checkoutPayload.lines[0];
-    checkoutPayload.lines = [linePayload, linePayload];
+    checkoutPayload.taxBase.discounts = [
+      { amount: { amount: 2 } },
+      { amount: { amount: 1 } },
+    ];
+    const linePayload = { ...checkoutPayload.taxBase.lines[0] };
+    const secondLinePayload = {
+      ...linePayload,
+      sourceLine: {
+        ...linePayload.sourceLine,
+        id: "Q2hlY2tvdXRMaW5lOjc=",
+      },
+    };
+    checkoutPayload.taxBase.lines = [linePayload, secondLinePayload];
 
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     // set body to undefined as the webhook handler expects that
@@ -271,21 +294,27 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
         {} as unknown as joseModule.FlattenedVerifyResult &
           joseModule.ResolvedKey
       );
-    const checkoutPayload = { ...dummyCheckoutPayload };
-
-    const linePayload = checkoutPayload.lines[0];
-    const secondLinePayload = {
-      ...linePayload,
-      id: "Q2hlY2tvdXRMaW5lOjc=",
-      charge_taxes: false,
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
     };
 
-    checkoutPayload.lines = [linePayload, secondLinePayload];
+    const linePayload = { ...checkoutPayload.taxBase.lines[0] };
+    const secondLinePayload = {
+      ...linePayload,
+      sourceLine: {
+        ...linePayload.sourceLine,
+        id: "Q2hlY2tvdXRMaW5lOjc=",
+      },
+      chargeTaxes: false,
+    };
+
+    checkoutPayload.taxBase.lines = [linePayload, secondLinePayload];
 
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     // set body to undefined as the webhook handler expects that
@@ -327,22 +356,30 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
         {} as unknown as joseModule.FlattenedVerifyResult &
           joseModule.ResolvedKey
       );
-    const checkoutPayload = { ...dummyCheckoutPayload };
-
-    checkoutPayload.discounts = [{ amount: "2" }, { amount: "1" }];
-    const linePayload = checkoutPayload.lines[0];
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
+    };
+    checkoutPayload.taxBase.discounts = [
+      { amount: { amount: 2 } },
+      { amount: { amount: 1 } },
+    ];
+    const linePayload = { ...checkoutPayload.taxBase.lines[0] };
     const secondLinePayload = {
       ...linePayload,
-      id: "Q2hlY2tvdXRMaW5lOjc=",
-      charge_taxes: false,
+      sourceLine: {
+        ...linePayload.sourceLine,
+        id: "Q2hlY2tvdXRMaW5lOjc=",
+      },
+      chargeTaxes: false,
     };
 
-    checkoutPayload.lines = [linePayload, secondLinePayload];
+    checkoutPayload.taxBase.lines = [linePayload, secondLinePayload];
 
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     // set body to undefined as the webhook handler expects that
@@ -385,22 +422,29 @@ describe("api/webhooks/checkout-calculate-taxes", () => {
         {} as unknown as joseModule.FlattenedVerifyResult &
           joseModule.ResolvedKey
       );
-    const checkoutPayload = { ...dummyCheckoutPayload };
-
-    const linePayload = checkoutPayload.lines[0];
-    linePayload.charge_taxes = false;
-    const secondLinePayload = {
-      ...linePayload,
-      id: "Q2hlY2tvdXRMaW5lOjc=",
-      charge_taxes: false,
+    const checkoutPayload = {
+      taxBase: { ...dummyFetchTaxesPayload },
+      __typename: "CalculateTaxes",
     };
 
-    checkoutPayload.lines = [linePayload, secondLinePayload];
+    const linePayload = {
+      ...checkoutPayload.taxBase.lines[0],
+      chargeTaxes: false,
+    };
+    const secondLinePayload = {
+      ...linePayload,
+      sourceLine: {
+        ...linePayload.sourceLine,
+        id: "Q2hlY2tvdXRMaW5lOjc=",
+      },
+    };
+
+    checkoutPayload.taxBase.lines = [linePayload, secondLinePayload];
 
     // set mock on next built-in library that build the payload from stream.
     const rawBodyModule = require("next/dist/compiled/raw-body/index.js");
     rawBodyModule.default.mockReturnValue({
-      toString: () => JSON.stringify([checkoutPayload]),
+      toString: () => JSON.stringify(checkoutPayload),
     });
 
     // set body to undefined as the webhook handler expects that

@@ -1,3 +1,4 @@
+import { CalculateTaxesEventSubscriptionFragment } from "@/generated/graphql";
 import { withSaleorDomainMatch } from "@/lib/middlewares";
 import { SALEOR_DOMAIN_HEADER } from "@saleor/app-sdk/const";
 import {
@@ -7,32 +8,22 @@ import {
 import type { Handler } from "retes";
 import { toNextHandler } from "retes/adapter";
 import { Response } from "retes/response";
-import { calculateOrderTaxes } from "../../../backend/taxHandlers";
-import { OrderPayload } from "../../../backend/types";
-import {
-  getTaxJarConfig,
-  taxJarConfigIsValidToUse,
-} from "../../../backend/utils";
+import { calculateTaxesHandler } from "../../../backend/taxHandlers";
 
 const handler: Handler = async (request) => {
   const saleorDomain = request.headers[SALEOR_DOMAIN_HEADER];
 
-  const body: OrderPayload[] =
+  const payload: CalculateTaxesEventSubscriptionFragment =
     typeof request.body === "string" ? JSON.parse(request.body) : request.body;
 
-  const orderPayload: OrderPayload = body[0];
-
-  const taxJarConfig = await getTaxJarConfig(
-    saleorDomain,
-    orderPayload.channel.slug
-  );
-  const validData = taxJarConfigIsValidToUse(taxJarConfig);
-
-  if (!validData.isValid) {
-    return { body: validData.message, status: validData.status };
+  if (payload?.__typename === "CalculateTaxes") {
+    const taxObject = payload.taxBase!;
+    return await calculateTaxesHandler(taxObject, saleorDomain);
   }
-  const calculatedTaxes = await calculateOrderTaxes(orderPayload, taxJarConfig);
-  return Response.OK(calculatedTaxes.data);
+  return Response.BadRequest({
+    success: false,
+    message: "Incorrect payload event.",
+  });
 };
 
 export default toNextHandler([

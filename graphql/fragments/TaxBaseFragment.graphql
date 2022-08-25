@@ -1,0 +1,69 @@
+fragment TaxBaseLineSubscripton on TaxableObjectLine {
+  chargeTaxes
+  sourceLine {
+    __typename
+    ... on CheckoutLine {
+      id
+      productVariant: variant {
+        id
+        product {
+          metafield(key: "taxjar_tax_code")
+          productType {
+            metafield(key: "taxjar_tax_code")
+          }
+        }
+      }
+    }
+    ... on OrderLine {
+      id
+      variant {
+        id
+        product {
+          metafield(key: "taxjar_tax_code")
+          productType {
+            metafield(key: "taxjar_tax_code")
+          }
+        }
+      }
+    }
+  }
+  quantity
+  unitPrice {
+    amount
+  }
+  totalPrice {
+    amount
+  }
+}
+fragment TaxDiscountSubscription on TaxableObjectDiscount {
+  name
+  amount {
+    amount
+  }
+}
+
+fragment TaxBaseSubscription on TaxableObject {
+  currency
+  channel {
+    slug
+  }
+  discounts {
+    ...TaxDiscountSubscription
+  }
+  address {
+    streetAddress1
+    streetAddress2
+    city
+    country {
+      code
+    }
+    countryArea
+    postalCode
+  }
+  shippingPrice {
+    amount
+  }
+  lines {
+    ...TaxBaseLineSubscripton
+  }
+}

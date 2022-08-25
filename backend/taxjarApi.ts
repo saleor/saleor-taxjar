@@ -1,7 +1,10 @@
 import Taxjar from "taxjar";
 import { TaxForOrderRes } from "taxjar/dist/util/types";
-import { OrderSubscriptionFragment } from "../generated/graphql";
-import { FetchTaxesPayload, TaxJarConfig } from "./types";
+import {
+  OrderSubscriptionFragment,
+  TaxBaseSubscriptionFragment,
+} from "../generated/graphql";
+import { FetchTaxesLinePayload, TaxJarConfig } from "./types";
 
 const getTaxjarClient = (taxJarConfig: TaxJarConfig) =>
   new Taxjar({
@@ -12,7 +15,8 @@ const getTaxjarClient = (taxJarConfig: TaxJarConfig) =>
   });
 
 export const fetchTaxes = async (
-  taxParams: FetchTaxesPayload,
+  taxBase: TaxBaseSubscriptionFragment,
+  linesWithChargeTaxes: Array<FetchTaxesLinePayload>,
   taxJarConfig: TaxJarConfig
 ) => {
   const client = getTaxjarClient(taxJarConfig);
@@ -22,18 +26,18 @@ export const fetchTaxes = async (
     from_state: taxJarConfig.shipFrom.fromState,
     from_city: taxJarConfig.shipFrom.fromCity,
     from_street: taxJarConfig.shipFrom.fromStreet,
-    to_country: taxParams.address.country,
-    to_zip: taxParams.address.postal_code,
-    to_state: taxParams.address.country_area,
-    to_city: taxParams.address.city,
-    to_street: `${taxParams.address.street_address_1} ${taxParams.address.street_address_2}`,
-    shipping: Number(taxParams.shipping_amount),
-    line_items: taxParams.lines.map((line) => ({
+    to_country: taxBase.address!.country.code,
+    to_zip: taxBase.address!.postalCode,
+    to_state: taxBase.address!.countryArea,
+    to_city: taxBase.address!.city,
+    to_street: `${taxBase.address!.streetAddress1} ${
+      taxBase.address!.streetAddress2
+    }`,
+    shipping: taxBase.shippingPrice.amount,
+    line_items: linesWithChargeTaxes.map((line) => ({
       id: line.id,
       quantity: line.quantity,
-      product_tax_code:
-        line.productMetadata.taxjar_tax_code ||
-        line.productTypeMetadata.taxjar_tax_code,
+      product_tax_code: line.taxCode || undefined,
       unit_price: line.unitAmount,
       discount: line.discount,
     })),

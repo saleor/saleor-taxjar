@@ -1,25 +1,30 @@
-import { OrderSubscriptionFragment } from "../generated/graphql";
+import {
+  OrderSubscriptionFragment,
+  TaxDiscountSubscription,
+  TaxBaseLineSubscriptonFragment,
+  TaxBaseSubscriptionFragment,
+} from "../generated/graphql";
 import { createOrderTransaction, fetchTaxes } from "./taxjarApi";
 import {
-  CheckoutPayload,
-  DiscountPayload,
   FetchTaxesLinePayload,
-  FetchTaxesPayload,
-  LinePayload,
-  OrderPayload,
   ResponseTaxPayload,
   TaxJarConfig,
 } from "./types";
+import {
+  getTaxJarConfig,
+  taxJarConfigIsValidToUse,
+  taxObjectIsValidToUse,
+} from "./utils";
 
 const getDiscountForLine = (
-  line: LinePayload,
+  line: TaxBaseLineSubscriptonFragment,
   totalDiscount: number,
   allLinesTotal: number
 ) => {
   if (totalDiscount === 0 || allLinesTotal === 0) {
     return 0;
   }
-  const lineTotalAmount = Number(line.total_amount);
+  const lineTotalAmount = Number(line.totalPrice.amount);
   const discountAmount = (lineTotalAmount / allLinesTotal) * totalDiscount;
   if (discountAmount > lineTotalAmount) {
     return lineTotalAmount;
@@ -28,16 +33,18 @@ const getDiscountForLine = (
 };
 
 const prepareLinesPayload = (
-  lines: Array<LinePayload>,
-  discounts: Array<DiscountPayload>
+  lines: Array<TaxBaseLineSubscriptonFragment>,
+  discounts: Array<TaxDiscountSubscription>
 ): Array<FetchTaxesLinePayload> => {
   const allLinesTotal = lines.reduce(
-    (total, current) => total + Number(current.total_amount),
+    (total, current) => total + Number(current.totalPrice.amount),
     0
   );
   const discountsSum =
-    discounts?.reduce((total, current) => total + Number(current.amount), 0) ||
-    0;
+    discounts?.reduce(
+      (total, current) => total + Number(current.amount.amount),
+      0
+    ) || 0;
 
   // Make sure that totalDiscount doesn't exceed a sum of all lines
   const totalDiscount =
@@ -50,56 +57,61 @@ const prepareLinesPayload = (
       allLinesTotal
     );
 
+    const taxCode =
+      line.sourceLine.__typename === "OrderLine"
+        ? line.sourceLine.variant!.product.metafield ||
+          line.sourceLine.variant!.product.productType.metafield
+        : line.sourceLine.productVariant.product.metafield ||
+          line.sourceLine.productVariant.product.productType.metafield;
     return {
-      id: line.id,
-      chargeTaxes: line.charge_taxes,
-      productMetadata: line.product_metadata,
-      productTypeMetadata: line.product_type_metadata,
+      id: line.sourceLine.id,
+      chargeTaxes: line.chargeTaxes,
+      taxCode: taxCode,
       quantity: line.quantity,
-      totalAmount: Number(line.total_amount),
-      unitAmount: Number(line.unit_amount),
+      totalAmount: Number(line.totalPrice.amount),
+      unitAmount: Number(line.unitPrice.amount),
       discount: discountAmount,
     };
   });
 };
 
-const calculateTaxes = async (
-  taxData: FetchTaxesPayload,
+export const calculateTaxes = async (
+  taxData: TaxBaseSubscriptionFragment,
   taxJarConfig: TaxJarConfig
 ): Promise<{ data: ResponseTaxPayload }> => {
-  const linesWithChargeTaxes = taxData.lines.filter(
+  const linesWithDiscounts = prepareLinesPayload(
+    taxData.lines,
+    taxData.discounts
+  );
+  const linesWithChargeTaxes = linesWithDiscounts.filter(
     (line) => line.chargeTaxes === true
   );
-  const taxDataWithChargeTaxes = {
-    ...taxData,
-    lines: linesWithChargeTaxes,
-  };
+
   const taxResponse =
     linesWithChargeTaxes.length !== 0
-      ? await fetchTaxes(taxDataWithChargeTaxes, taxJarConfig)
+      ? await fetchTaxes(taxData, linesWithChargeTaxes, taxJarConfig)
       : undefined;
-
   const taxDetails = taxResponse?.tax.breakdown;
   const shippingDetails = taxDetails?.shipping;
 
   const shippingPriceGross = shippingDetails
-    ? String(shippingDetails.taxable_amount + shippingDetails.tax_collectable)
-    : taxData.shipping_amount;
+    ? shippingDetails.taxable_amount + shippingDetails.tax_collectable
+    : taxData.shippingPrice.amount;
   const shippingPriceNet = shippingDetails
-    ? String(shippingDetails.taxable_amount)
-    : taxData.shipping_amount;
+    ? shippingDetails.taxable_amount
+    : taxData.shippingPrice.amount;
   const shippingTaxRate = shippingDetails
-    ? String(shippingDetails.combined_tax_rate)
-    : "0";
+    ? shippingDetails.combined_tax_rate
+    : 0;
 
   return {
     data: {
-      shipping_price_gross_amount: shippingPriceGross,
-      shipping_price_net_amount: shippingPriceNet,
-      shipping_tax_rate: shippingTaxRate,
+      shipping_price_gross_amount: shippingPriceGross.toFixed(2),
+      shipping_price_net_amount: shippingPriceNet.toFixed(2),
+      shipping_tax_rate: String(shippingTaxRate),
       // lines order needs to be the same as for recieved payload.
       // lines that have chargeTaxes === false will have returned default value
-      lines: taxData.lines.map((line) => {
+      lines: linesWithDiscounts.map((line) => {
         const lineTax = taxDetails?.line_items?.find((l) => l.id === line.id);
         const totalGrossAmount = lineTax
           ? lineTax.taxable_amount + lineTax.tax_collectable
@@ -107,7 +119,7 @@ const calculateTaxes = async (
         const totalNetAmount = lineTax
           ? lineTax.taxable_amount
           : line.totalAmount - line.discount;
-        const taxRate = lineTax ? String(lineTax.combined_tax_rate) : "0";
+        const taxRate = lineTax ? String(lineTax.combined_tax_rate || 0) : "0";
         return {
           total_gross_amount: totalGrossAmount.toFixed(2),
           total_net_amount: totalNetAmount.toFixed(2),
@@ -118,35 +130,26 @@ const calculateTaxes = async (
   };
 };
 
-export const calculateCheckoutTaxes = async (
-  checkoutPayload: CheckoutPayload,
-  taxJarConfig: TaxJarConfig
-): Promise<{ data: ResponseTaxPayload }> => {
-  const taxData: FetchTaxesPayload = {
-    address: checkoutPayload.address,
-    lines: prepareLinesPayload(
-      checkoutPayload.lines,
-      checkoutPayload.discounts
-    ),
-    channel: checkoutPayload.channel,
-    shipping_amount: checkoutPayload.shipping_amount,
-    shipping_name: checkoutPayload.shipping_name,
-  };
-  return await calculateTaxes(taxData, taxJarConfig);
-};
+export const calculateTaxesHandler = async (
+  taxObject: TaxBaseSubscriptionFragment,
+  saleorDomain: string
+) => {
+  const taxJarConfig = await getTaxJarConfig(
+    saleorDomain,
+    taxObject.channel.slug
+  );
+  const validData = taxJarConfigIsValidToUse(taxJarConfig);
 
-export const calculateOrderTaxes = async (
-  orderPayload: OrderPayload,
-  taxJarConfig: TaxJarConfig
-): Promise<{ data: ResponseTaxPayload }> => {
-  const taxData: FetchTaxesPayload = {
-    address: orderPayload.address,
-    lines: prepareLinesPayload(orderPayload.lines, orderPayload.discounts),
-    channel: orderPayload.channel,
-    shipping_amount: orderPayload.shipping_amount,
-    shipping_name: orderPayload.shipping_name,
-  };
-  return await calculateTaxes(taxData, taxJarConfig);
+  if (!validData.isValid) {
+    return { body: validData.message, status: validData.status };
+  }
+
+  const validTaxObject = taxObjectIsValidToUse(taxObject);
+  if (!validTaxObject.isValid) {
+    return { body: validData.message, status: validData.status };
+  }
+  const calculatedTaxes = await calculateTaxes(taxObject, taxJarConfig);
+  return { body: calculatedTaxes.data, status: 200 };
 };
 
 export const createTaxJarOrder = async (

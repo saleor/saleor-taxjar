@@ -1,11 +1,7 @@
+import { TaxBaseSubscriptionFragment } from "@/generated/graphql";
 import { createMocks, RequestMethod } from "node-mocks-http";
 import { TaxForOrderRes } from "taxjar/dist/types/returnTypes";
-import {
-  CheckoutPayload,
-  FetchTaxesPayload,
-  OrderPayload,
-  TaxJarConfig,
-} from "../backend/types";
+import { TaxJarConfig } from "../backend/types";
 
 type RequestConfiguration = {
   method: RequestMethod;
@@ -32,128 +28,64 @@ export const mockRequest = (configuration: RequestConfiguration) => {
   return { req, res };
 };
 
-export const dummyCheckoutPayload: CheckoutPayload = {
-  channel: {
-    slug: "channel-pln",
-    currency_code: "PLN",
-  },
-  address: {
-    first_name: "Ann22a",
-    last_name: "Joa22nna",
-    company_name: "",
-    street_address_1: "8559 Lakes Avenue",
-    street_address_2: "",
-    city: "POOLE",
-    city_area: "",
-    postal_code: "BH15 1AB",
-    country: "GB",
-    country_area: "",
-    phone: "+12125094995",
-  },
-  shipping_amount: "10.00",
-  shipping_name: "DB Schenker",
-  lines: [
-    {
-      id: "Q2hlY2tvdXRMaW5lOjU=",
-      sku: "21438542",
-      variant_id: "UHJvZHVjdFZhcmlhbnQ6MjI1",
-      quantity: 1,
-      charge_taxes: true,
-      full_name: "Bean Juice (2l)",
-      product_name: "Bean Juice",
-      variant_name: "2l",
-      product_metadata: {},
-      product_type_metadata: {},
-      unit_amount: "28.00",
-      total_amount: "28.00",
-    },
-  ],
-  id: "1234",
-  user_id: null,
-  user_public_metadata: {},
-  included_taxes_in_prices: false,
+export const dummyOrderPayload: TaxBaseSubscriptionFragment = {
   currency: "USD",
-  metadata: {},
-  private_metadata: {},
+  channel: { slug: "default-channel" },
   discounts: [],
-};
-
-export const dummyOrderPayload: OrderPayload = {
-  channel: {
-    slug: "channel-pln",
-    currency_code: "PLN",
-  },
   address: {
-    first_name: "Ann22a",
-    last_name: "Joa22nna",
-    company_name: "",
-    street_address_1: "8559 Lakes Avenue",
-    street_address_2: "",
+    streetAddress1: "8559 Lakes Avenue",
+    streetAddress2: "",
     city: "POOLE",
-    city_area: "",
-    postal_code: "BH15 1AB",
-    country: "GB",
-    country_area: "",
-    phone: "+12125094995",
+    country: { code: "GB" },
+    countryArea: "",
+    postalCode: "BH15 1AB",
   },
-  shipping_amount: "10.00",
-  shipping_name: "DB Schenker",
+  shippingPrice: { amount: 10.0 },
   lines: [
     {
-      id: "Q2hlY2tvdXRMaW5lOjU=",
-      sku: "21438542",
-      variant_id: "UHJvZHVjdFZhcmlhbnQ6MjI1",
-      quantity: 1,
-      charge_taxes: true,
-      full_name: "Bean Juice (2l)",
-      product_name: "Bean Juice",
-      variant_name: "2l",
-      product_metadata: {},
-      product_type_metadata: {},
-      unit_amount: "28.00",
-      total_amount: "28.00",
-    },
-  ],
-  id: "1234",
-  user_id: null,
-  user_public_metadata: {},
-  included_taxes_in_prices: false,
-  currency: "USD",
-  metadata: {},
-  private_metadata: {},
-  discounts: [],
-};
-
-export const dummyFetchTaxesPayload: FetchTaxesPayload = {
-  channel: {
-    slug: "channel-pln",
-    currency_code: "PLN",
-  },
-  address: {
-    first_name: "Ann22a",
-    last_name: "Joa22nna",
-    company_name: "",
-    street_address_1: "8559 Lakes Avenue",
-    street_address_2: "",
-    city: "POOLE",
-    city_area: "",
-    postal_code: "BH15 1AB",
-    country: "GB",
-    country_area: "",
-    phone: "+12125094995",
-  },
-  shipping_amount: "10.00",
-  shipping_name: "DB Schenker",
-  lines: [
-    {
-      id: "Q2hlY2tvdXRMaW5lOjU=",
-      quantity: 1,
       chargeTaxes: true,
-      productMetadata: {},
-      productTypeMetadata: {},
-      unitAmount: 28.0,
-      totalAmount: 28.0,
-      discount: 0,
+      sourceLine: {
+        __typename: "OrderLine",
+        id: "T3JkZXJMaW5lOjhjNDBlOTJiLWYzNzEtNDRhNS05NTYwLWM2YzQ3ODU1YTI4Ng==",
+        variant: {
+          id: "UHJvZHVjdFZhcmlhbnQ6Mzg0",
+          product: { metafield: null, productType: { metafield: null } },
+        },
+      },
+      quantity: 1,
+      unitPrice: { amount: 28.0 },
+      totalPrice: { amount: 28.0 },
+    },
+  ],
+};
+
+export const dummyFetchTaxesPayload: TaxBaseSubscriptionFragment = {
+  currency: "USD",
+  channel: { slug: "default-channel" },
+  discounts: [],
+  address: {
+    streetAddress1: "8559 Lakes Avenue",
+    streetAddress2: "",
+    city: "POOLE",
+    country: { code: "GB" },
+    countryArea: "",
+    postalCode: "BH15 1AB",
+  },
+  shippingPrice: { amount: 10.0 },
+  lines: [
+    {
+      chargeTaxes: true,
+      sourceLine: {
+        __typename: "CheckoutLine",
+        id: "Q2hlY2tvdXRMaW5lOjU=",
+        productVariant: {
+          id: "UHJvZHVjdFZhcmlhbnQ6Mzg0",
+          product: { metafield: null, productType: { metafield: null } },
+        },
+      },
+      quantity: 1,
+      unitPrice: { amount: 28.0 },
+      totalPrice: { amount: 28.0 },
     },
   ],
 };
@@ -327,5 +259,6 @@ export const dummyTaxJarConfig: TaxJarConfig = {
     fromStreet: "Teczowa 7",
   },
   apiKey: "dummyKey",
+  active: true,
   sandbox: true,
 };

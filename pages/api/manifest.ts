@@ -23,7 +23,7 @@ const handler: Handler = async (request) => {
     version: version,
     name: appName,
     about: "Saleor TaxJar app to provide sales tax compliance for your store.",
-    permissions: ["MANAGE_ORDERS", "HANDLE_TAXES", "MANAGE_PRODUCTS"],
+    permissions: ["MANAGE_ORDERS", "HANDLE_TAXES"],
     appUrl: baseURL,
     dataPrivacyUrl: `${baseURL}/data-privacy`,
     supportUrl: `${baseURL}/support`,

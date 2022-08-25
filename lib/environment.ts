@@ -21,15 +21,15 @@ export const setAuthToken = async (token: string) => {
 
   if (process.env.VERCEL === "1") {
     invariant(
-      process.env.SALEOR_MARKETPLACE_REGISTER_URL,
-      "Env var SALEOR_MARKETPLACE_REGISTER_URL is not configured."
+      process.env.SALEOR_REGISTER_APP_URL,
+      "Env var SALEOR_REGISTER_APP_URL is not configured."
     );
-    await fetch(process.env.SALEOR_MARKETPLACE_REGISTER_URL, {
+    await fetch(process.env.SALEOR_REGISTER_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        auth_token: token,
-        marketplace_token: process.env.SALEOR_MARKETPLACE_TOKEN,
+        token: process.env.SALEOR_DEPLOYMENT_TOKEN,
+        envs: [{key: "SALEOR_AUTH_TOKEN", value: token}],
       }),
     });
   } else {

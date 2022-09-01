@@ -1,0 +1,5 @@
+subscription CheckoutCalculateTaxesSubscription {
+  event {
+    ...CalculateTaxesEventSubscription
+  }
+}

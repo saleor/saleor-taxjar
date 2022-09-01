@@ -1,15 +1,22 @@
 import { appName } from "@/constants";
-import { NextApiHandler } from "next";
 
-import { getBaseURL } from "../../lib/middlewares";
+import type { Handler } from "retes";
+
+import { toNextHandler } from "retes/adapter";
+import { Response } from "retes/response";
+import { inferWebhooks } from "@saleor/app-sdk";
+import { withBaseURL } from "@saleor/app-sdk/middleware";
+
 import { version } from "../../package.json";
+import * as GeneratedGraphQL from "../../generated/graphql";
 
-const handler: NextApiHandler = (request, response) => {
-  const baseURL = getBaseURL(request);
-
-  // FIXME: Temporary turn off the usage of webhooks as Saleor doesn't have an implementation of subscription
-  //for tax sync webhooks
-  //const webhooks = await inferWebhooks(baseURL, "pages/api/webhooks", GeneratedGraphQL);
+const handler: Handler = async (request) => {
+  const { baseURL } = request.context;
+  const webhooks = await inferWebhooks(
+    baseURL,
+    `${__dirname}/webhooks`,
+    GeneratedGraphQL
+  );
 
   const manifest = {
     id: "saleor.taxjar.app",
@@ -21,10 +28,10 @@ const handler: NextApiHandler = (request, response) => {
     dataPrivacyUrl: `${baseURL}/data-privacy`,
     supportUrl: `${baseURL}/support`,
     tokenTargetUrl: `${baseURL}/api/register`,
-    // webhooks,
+    webhooks,
   };
 
-  response.json(manifest);
+  return Response.OK(manifest);
 };
 
-export default handler;
+export default toNextHandler([withBaseURL, handler]);

@@ -108,10 +108,11 @@ export const calculateTaxes = async (
     data: {
       shipping_price_gross_amount: shippingPriceGross.toFixed(2),
       shipping_price_net_amount: shippingPriceNet.toFixed(2),
-      shipping_tax_rate: String(shippingTaxRate),
+      shipping_tax_rate: (shippingTaxRate * 100).toFixed(2),
       // lines order needs to be the same as for recieved payload.
       // lines that have chargeTaxes === false will have returned default value
       lines: linesWithDiscounts.map((line) => {
+        // FIXME: make sure that we use correct ID here
         const lineTax = taxDetails?.line_items?.find((l) => l.id === line.id);
         const totalGrossAmount = lineTax
           ? lineTax.taxable_amount + lineTax.tax_collectable
@@ -119,7 +120,9 @@ export const calculateTaxes = async (
         const totalNetAmount = lineTax
           ? lineTax.taxable_amount
           : line.totalAmount - line.discount;
-        const taxRate = lineTax ? String(lineTax.combined_tax_rate || 0) : "0";
+        const taxRate = lineTax
+          ? ((lineTax.combined_tax_rate || 0) * 100).toFixed(2)
+          : "0.00";
         return {
           total_gross_amount: totalGrossAmount.toFixed(2),
           total_net_amount: totalNetAmount.toFixed(2),

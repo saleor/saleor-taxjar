@@ -205,11 +205,11 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
     expect(data.shipping_price_gross_amount).toBe("12.30");
     expect(data.shipping_price_net_amount).toBe("10.00");
-    expect(data.shipping_tax_rate).toBe("0.23");
+    expect(data.shipping_tax_rate).toBe("23.00");
     expect(data.lines.length).toBe(1);
     expect(data.lines[0].total_gross_amount).toBe("34.44");
     expect(data.lines[0].total_net_amount).toBe("28.00");
-    expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(data.lines[0].tax_rate).toBe("23.00");
     expect(res.statusCode).toBe(200);
 
     mockJose.mockRestore();
@@ -268,11 +268,11 @@ describe("api/webhooks/order-calculate-taxes", () => {
     // amounts already include propagated discount
     expect(data.lines[0].total_gross_amount).toBe("32.60");
     expect(data.lines[0].total_net_amount).toBe("26.50");
-    expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(data.lines[0].tax_rate).toBe("23.00");
 
     expect(data.lines[1].total_gross_amount).toBe("32.60");
     expect(data.lines[1].total_net_amount).toBe("26.50");
-    expect(data.lines[1].tax_rate).toBe("0.23");
+    expect(data.lines[1].tax_rate).toBe("23.00");
     expect(res.statusCode).toBe(200);
 
     mockJose.mockRestore();
@@ -328,11 +328,11 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
     expect(data.lines[0].total_gross_amount).toBe("34.44");
     expect(data.lines[0].total_net_amount).toBe("28.00");
-    expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(data.lines[0].tax_rate).toBe("23.00");
 
     expect(data.lines[1].total_gross_amount).toBe("28.00");
     expect(data.lines[1].total_net_amount).toBe("28.00");
-    expect(data.lines[1].tax_rate).toBe("0");
+    expect(data.lines[1].tax_rate).toBe("0.00");
 
     expect(res.statusCode).toBe(200);
 
@@ -393,11 +393,11 @@ describe("api/webhooks/order-calculate-taxes", () => {
     // amounts already include propagated discount
     expect(data.lines[0].total_gross_amount).toBe("32.60");
     expect(data.lines[0].total_net_amount).toBe("26.50");
-    expect(data.lines[0].tax_rate).toBe("0.23");
+    expect(data.lines[0].tax_rate).toBe("23.00");
 
     expect(data.lines[1].total_gross_amount).toBe("26.50");
     expect(data.lines[1].total_net_amount).toBe("26.50");
-    expect(data.lines[1].tax_rate).toBe("0");
+    expect(data.lines[1].tax_rate).toBe("0.00");
 
     expect(res.statusCode).toBe(200);
 
@@ -454,11 +454,11 @@ describe("api/webhooks/order-calculate-taxes", () => {
 
     expect(data.lines[0].total_gross_amount).toBe("28.00");
     expect(data.lines[0].total_net_amount).toBe("28.00");
-    expect(data.lines[0].tax_rate).toBe("0");
+    expect(data.lines[0].tax_rate).toBe("0.00");
 
     expect(data.lines[1].total_gross_amount).toBe("28.00");
     expect(data.lines[1].total_net_amount).toBe("28.00");
-    expect(data.lines[1].tax_rate).toBe("0");
+    expect(data.lines[1].tax_rate).toBe("0.00");
 
     expect(res.statusCode).toBe(200);
 

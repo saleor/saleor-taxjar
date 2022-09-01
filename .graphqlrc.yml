@@ -1,4 +1,4 @@
-schema: https://vercel.saleor.cloud/graphql/
+schema: ${SCHEMA_ENDPOINT:"https://vercel.saleor.cloud/graphql/"}
 documents: graphql/**/*.graphql
 extensions:
   codegen:

@@ -1,6 +1,6 @@
 import {
   OrderSubscriptionFragment,
-  TaxDiscountSubscription,
+  TaxDiscountSubscriptionFragment,
   TaxBaseLineSubscriptonFragment,
   TaxBaseSubscriptionFragment,
 } from "../generated/graphql";
@@ -34,7 +34,7 @@ const getDiscountForLine = (
 
 const prepareLinesPayload = (
   lines: Array<TaxBaseLineSubscriptonFragment>,
-  discounts: Array<TaxDiscountSubscription>
+  discounts: Array<TaxDiscountSubscriptionFragment>
 ): Array<FetchTaxesLinePayload> => {
   const allLinesTotal = lines.reduce(
     (total, current) => total + Number(current.totalPrice.amount),

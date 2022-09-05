@@ -24,7 +24,7 @@ export const setAuthToken = async (token: string) => {
       process.env.SALEOR_REGISTER_APP_URL,
       "Env var SALEOR_REGISTER_APP_URL is not configured."
     );
-    await fetch(process.env.SALEOR_REGISTER_APP_URL, {
+    const response = await fetch(process.env.SALEOR_REGISTER_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -32,7 +32,10 @@ export const setAuthToken = async (token: string) => {
         envs: [{key: "SALEOR_AUTH_TOKEN", value: token}],
       }),
     });
+    const result = await response.json();
+    console.log(result)
   } else {
     fs.writeFileSync(".auth_token", token);
   }
 };
+

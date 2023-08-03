@@ -67,7 +67,7 @@
     "eslint-config-google": "^0.14.0",
     "eslint-config-next": "12.1.6",
     "jest": "^28.1.0",
-    "jose": "^4.8.3",
+    "jose": "^4.9.2",
     "node-mocks-http": "^1.11.0",
     "postcss": "^8.4.13",
     "prettier": "^2.6.2",
